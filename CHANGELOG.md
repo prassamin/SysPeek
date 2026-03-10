@@ -6,6 +6,7 @@
   - Support for overriding standard Kirigami colors with custom user-defined widgets colors.
   - Introduced **Dynamic Thresholding**: Configure distinct warning and critical thresholds (with custom highlight colors) for CPU, RAM, Swap (%), and Network speeds (MB/s).
 - **Icon Size Scaling**: Icon sizes now scale proportionally with the selected font size setting.
+- **Icon Coloring**: Icons now automatically inherit the chosen custom UI and dynamic threshold colors alongside the text.
 - **Fixed Font Scaling**: Switched from `pixelSize` to `pointSize` so font size settings scale properly on high-DPI displays and across varying Plasma environments.
 
 ## [v1.1.0] - 2026-02-06
