@@ -107,7 +107,11 @@
     "Description[zh_CN]": "一个用于系统监控的轻量级紧凑型等离子体。",
     "Description[zh_TW]": "一個用於系統監控的輕量級緊湊型等離子體。",
     "EnabledByDefault": true,
-    "FormFactors": ["tablet", "handset", "desktop"],
+    "FormFactors": [
+      "tablet",
+      "handset",
+      "desktop"
+    ],
     "Icon": "utilities-system-monitor",
     "Id": "com.pras.syspeek",
     "License": "GPL-2.0+",
@@ -160,7 +164,7 @@
     "Name[vi]": "SysPeek",
     "Name[zh_CN]": "系统快览",
     "Name[zh_TW]": "系統快覽",
-    "Version": "1.1.0",
+    "Version": "1.2.0",
     "Website": "https://github.com/PRASSamin/SysPeek"
   },
   "X-Plasma-API-Minimum-Version": "6.0",
