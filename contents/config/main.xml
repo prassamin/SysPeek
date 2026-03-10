@@ -59,5 +59,57 @@
             <label>Widget Width</label>
             <default>400</default>
         </entry>
+        <entry name="cpuColor" type="Color">
+            <label>CPU Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="ramColor" type="Color">
+            <label>RAM Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="swapColor" type="Color">
+            <label>Swap Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="uploadColor" type="Color">
+            <label>Upload Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="downloadColor" type="Color">
+            <label>Download Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="percentWarningThreshold" type="Int">
+            <label>Usage Above</label>
+            <default>80</default>
+        </entry>
+        <entry name="percentWarningColor" type="Color">
+            <label>Usage Color</label>
+            <default>#ffa500</default>
+        </entry>
+        <entry name="percentCriticalThreshold" type="Int">
+            <label>Usage Above</label>
+            <default>95</default>
+        </entry>
+        <entry name="percentCriticalColor" type="Color">
+            <label>Usage Color</label>
+            <default>#ff0000</default>
+        </entry>
+        <entry name="speedWarningThreshold" type="Int">
+            <label>Speed Above</label>
+            <default>1</default>
+        </entry>
+        <entry name="speedWarningColor" type="Color">
+            <label>Speed Color</label>
+            <default>#00ffff</default>
+        </entry>
+        <entry name="speedCriticalThreshold" type="Int">
+            <label>Speed Above</label>
+            <default>5</default>
+        </entry>
+        <entry name="speedCriticalColor" type="Color">
+            <label>Speed Color</label>
+            <default>#00ff00</default>
+        </entry>
     </group>
 </kcfg>
