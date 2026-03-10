@@ -29,11 +29,7 @@ PlasmoidItem {
         return (bytes / 1.07374e+09).toFixed(1) + " GB";
     }
 
-    function percentColor(val, baseColor) {
-        if (!Plasmoid.configuration.useDynamicColors)
-            return baseColor;
-
-        const v = Math.trunc(val);
+    function percentColor(val, baseColor) {        const v = Math.trunc(val);
         if (v >= Plasmoid.configuration.percentCriticalThreshold)
             return Plasmoid.configuration.percentCriticalColor;
 
@@ -43,11 +39,7 @@ PlasmoidItem {
         return baseColor;
     }
 
-    function speedColor(speed, baseColor) {
-        if (!Plasmoid.configuration.useDynamicColors)
-            return baseColor;
-
-        if (speed >= Plasmoid.configuration.speedCriticalThreshold * 1024 * 1024)
+    function speedColor(speed, baseColor) {        if (speed >= Plasmoid.configuration.speedCriticalThreshold * 1024 * 1024)
             return Plasmoid.configuration.speedCriticalColor;
 
         if (speed >= Plasmoid.configuration.speedWarningThreshold * 1024 * 1024)
@@ -133,7 +125,7 @@ PlasmoidItem {
             visible: Plasmoid.configuration.showCpu
             icon: Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
-            color: percentColor(cpu.value, Plasmoid.configuration.useCustomColors ? Plasmoid.configuration.cpuColor : Kirigami.Theme.textColor)
+            color: percentColor(cpu.value, Plasmoid.configuration.cpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -143,7 +135,7 @@ PlasmoidItem {
             visible: Plasmoid.configuration.showRam
             icon: Qt.resolvedUrl("../icons/memory.svg")
             label: (ramUsed.value !== undefined && ramTotal.value !== undefined) ? percent(ramUsed.value, ramTotal.value) : "N/A"
-            color: percentColor((ramUsed.value / ramTotal.value * 100), Plasmoid.configuration.useCustomColors ? Plasmoid.configuration.ramColor : Kirigami.Theme.textColor)
+            color: percentColor((ramUsed.value / ramTotal.value * 100), Plasmoid.configuration.ramColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -153,7 +145,7 @@ PlasmoidItem {
             visible: Plasmoid.configuration.showSwap
             icon: Qt.resolvedUrl("../icons/swap.svg")
             label: (swapUsed.value !== undefined && swapTotal.value !== undefined) ? percent(swapUsed.value, swapTotal.value) : "N/A"
-            color: percentColor((swapUsed.value / swapTotal.value * 100), Plasmoid.configuration.useCustomColors ? Plasmoid.configuration.swapColor : Kirigami.Theme.textColor)
+            color: percentColor((swapUsed.value / swapTotal.value * 100), Plasmoid.configuration.swapColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -163,7 +155,7 @@ PlasmoidItem {
             visible: Plasmoid.configuration.showUpload
             icon: Qt.resolvedUrl("../icons/up.svg")
             label: netUp.value !== undefined && formatBytes(netUp.value || 0)
-            color: speedColor(netUp.value, Plasmoid.configuration.useCustomColors ? Plasmoid.configuration.uploadColor : Kirigami.Theme.textColor)
+            color: speedColor(netUp.value, Plasmoid.configuration.uploadColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -173,7 +165,7 @@ PlasmoidItem {
             visible: Plasmoid.configuration.showDownload
             icon: Qt.resolvedUrl("../icons/down.svg")
             label: netDown.value !== undefined && formatBytes(netDown.value || 0)
-            color: speedColor(netDown.value, Plasmoid.configuration.useCustomColors ? Plasmoid.configuration.downloadColor : Kirigami.Theme.textColor)
+            color: speedColor(netDown.value, Plasmoid.configuration.downloadColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily

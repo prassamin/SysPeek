@@ -11,7 +11,7 @@ KCM.SimpleKCM {
     property alias cfg_iconTextSpacing: iconTextSpacing.value
     property alias cfg_horizontalPadding: horizontalPadding.value
     property alias cfg_verticalPadding: verticalPadding.value
-    property int cfg_fontSize: 12
+    property int cfg_fontSize: 10
     property string cfg_fontFamily: ""
     property alias cfg_showCpu: showCpu.checked
     property alias cfg_showRam: showRam.checked
@@ -155,14 +155,13 @@ KCM.SimpleKCM {
 
             Kirigami.FormData.label: i18n("Font Family")
             Layout.fillWidth: true
-            model: Qt.fontFamilies()
-            currentIndex: model.indexOf(cfg_fontFamily) >= 0 ? model.indexOf(cfg_fontFamily) : 0
-            onActivated: cfg_fontFamily = currentText
-            Component.onCompleted: {
-                if (cfg_fontFamily === "")
-                    cfg_fontFamily = currentText;
-
+            model: {
+                let fonts = Qt.fontFamilies();
+                fonts.unshift(i18n("System Default"));
+                return fonts;
             }
+            currentIndex: cfg_fontFamily === "" ? 0 : Math.max(0, model.indexOf(cfg_fontFamily))
+            onActivated: cfg_fontFamily = (currentIndex === 0) ? "" : currentText
         }
 
         Item {

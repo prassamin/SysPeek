@@ -8,7 +8,7 @@ Item {
     property alias label: labelText.text
     property alias color: labelText.color
     property int iconTextSpacing: Kirigami.Units.smallSpacing
-    property int fontSize: 12
+    property int fontSize: 10
     property string fontFamily: ""
 
     implicitWidth: parent
@@ -21,8 +21,8 @@ Item {
         Image {
             id: iconImage
 
-            width: Kirigami.Units.iconSizes.small
-            height: Kirigami.Units.iconSizes.small
+            width: Math.round(Kirigami.Units.iconSizes.small * (fontSize / 10.0))
+            height: Math.round(Kirigami.Units.iconSizes.small * (fontSize / 10.0))
             fillMode: Image.PreserveAspectFit
         }
 
@@ -31,8 +31,8 @@ Item {
 
             verticalAlignment: Text.AlignVCenter
             color: color
-            font.pixelSize: fontSize
-            font.family: fontFamily !== "" ? fontFamily : undefined
+            font.pointSize: fontSize
+            font.family: fontFamily !== "" ? fontFamily : Kirigami.Theme.defaultFont.family
             font.bold: true
         }
 

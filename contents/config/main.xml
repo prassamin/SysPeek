@@ -29,7 +29,7 @@
         </entry>
         <entry name="fontSize" type="Int">
             <label>Font Size</label>
-            <default>12</default>
+            <default>10</default>
         </entry>
         <entry name="fontFamily" type="String">
             <label>Font Family</label>

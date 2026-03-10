@@ -2,9 +2,11 @@
 
 ## [v1.2.0] - 2026-03-10
 
-- **Added Color Customization** ([#4](https://github.com/PRASSamin/SysPeek/issues/4))
+- **Added Comprehensive Color Customization** ([#4](https://github.com/PRASSamin/SysPeek/issues/4))
   - Support for overriding standard Kirigami colors with custom user-defined widgets colors.
   - Introduced **Dynamic Thresholding**: Configure distinct warning and critical thresholds (with custom highlight colors) for CPU, RAM, Swap (%), and Network speeds (MB/s).
+- **Icon Size Scaling**: Icon sizes now scale proportionally with the selected font size setting.
+- **Fixed Font Scaling**: Switched from `pixelSize` to `pointSize` so font size settings scale properly on high-DPI displays and across varying Plasma environments.
 
 ## [v1.1.0] - 2026-02-06
 
