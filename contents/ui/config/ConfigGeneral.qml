@@ -18,7 +18,9 @@ KCM.SimpleKCM {
     property alias cfg_showSwap: showSwap.checked
     property alias cfg_showUpload: showUpload.checked
     property alias cfg_showDownload: showDownload.checked
+    property alias cfg_useFixedWidth: useFixedWidth.checked
     property alias cfg_widgetWidth: widgetWidth.value
+    property alias cfg_bgOpacity: bgOpacity.value
     property string cfg_cpuColor: "#ffffff"
     property string cfg_ramColor: "#ffffff"
     property string cfg_swapColor: "#ffffff"
@@ -79,9 +81,33 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Show Download Speed")
         }
 
+        RowLayout {
+            Kirigami.FormData.label: i18n("Background Opacity")
+
+            QQC2.Slider {
+                id: bgOpacity
+
+                from: 0
+                to: 100
+                stepSize: 5
+                Layout.fillWidth: true
+            }
+
+            QQC2.Label {
+                text: bgOpacity.value + "%"
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 2
+            }
+        }
+
         Item {
             Kirigami.FormData.isSection: true
             Kirigami.FormData.label: i18n("Dimensions")
+        }
+
+        QQC2.CheckBox {
+            id: useFixedWidth
+
+            Kirigami.FormData.label: i18n("Use Fixed Width")
         }
 
         QQC2.SpinBox {
@@ -91,6 +117,7 @@ KCM.SimpleKCM {
             from: 100
             to: 800
             stepSize: 10
+            enabled: useFixedWidth.checked
         }
 
         Item {

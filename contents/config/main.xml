@@ -55,9 +55,17 @@
             <label>Show Download Speed</label>
             <default>true</default>
         </entry>
+        <entry name="useFixedWidth" type="Bool">
+            <label>Use Fixed Width</label>
+            <default>false</default>
+        </entry>
         <entry name="widgetWidth" type="Int">
             <label>Widget Width</label>
             <default>400</default>
+        </entry>
+        <entry name="bgOpacity" type="Int">
+            <label>Background Opacity</label>
+            <default>50</default>
         </entry>
         <entry name="cpuColor" type="Color">
             <label>CPU Color</label>

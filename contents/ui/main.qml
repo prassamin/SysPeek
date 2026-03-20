@@ -1,7 +1,7 @@
 import QtQuick 6.5
-import QtQuick.Controls 2.5
 import QtQuick.Layouts 6.5
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.ksvg as KSvg
 import org.kde.ksysguard.sensors 1.0 as Sensors
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
@@ -10,7 +10,12 @@ import org.kde.plasma.plasmoid 2.0
 PlasmoidItem {
     id: root
 
-    property int forcedWidth: Plasmoid.configuration.widgetWidth
+    // whether we are on the desktop or in a panel
+    readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
+
+    // content based dimensions
+    readonly property real contentWidth: rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2
+    readonly property real contentHeight: rowLayout.implicitHeight + Plasmoid.configuration.verticalPadding * 2
 
     function percent(val, total) {
         return total > 0 ? Math.round(val / total * 100) + "%" : "N/A";
@@ -18,42 +23,43 @@ PlasmoidItem {
 
     function formatBytes(bytes) {
         if (bytes < 1024)
-            return (bytes / 1024).toFixed(1) + " KB";
-
+            return bytes.toFixed(0) + " B";
         if (bytes < 1.04858e+06)
             return (bytes / 1024).toFixed(1) + " KB";
-
         if (bytes < 1.07374e+09)
             return (bytes / 1.04858e+06).toFixed(1) + " MB";
-
         return (bytes / 1.07374e+09).toFixed(1) + " GB";
     }
 
-    function percentColor(val, baseColor) {        const v = Math.trunc(val);
+    function percentColor(val, baseColor) {
+        const v = Math.trunc(val);
         if (v >= Plasmoid.configuration.percentCriticalThreshold)
             return Plasmoid.configuration.percentCriticalColor;
-
         if (v >= Plasmoid.configuration.percentWarningThreshold)
             return Plasmoid.configuration.percentWarningColor;
-
         return baseColor;
     }
 
-    function speedColor(speed, baseColor) {        if (speed >= Plasmoid.configuration.speedCriticalThreshold * 1024 * 1024)
+    function speedColor(speed, baseColor) {
+        if (speed >= Plasmoid.configuration.speedCriticalThreshold * 1024 * 1024)
             return Plasmoid.configuration.speedCriticalColor;
-
         if (speed >= Plasmoid.configuration.speedWarningThreshold * 1024 * 1024)
             return Plasmoid.configuration.speedWarningColor;
-
         return baseColor;
     }
 
-    width: forcedWidth
-    Layout.preferredWidth: forcedWidth
-    Layout.minimumWidth: forcedWidth
-    Layout.maximumWidth: forcedWidth
-    implicitHeight: Kirigami.Units.iconSizes.small + Kirigami.Units.smallSpacing * 2
-    Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground
+    // on panel plasma draws background on desktop draw using Ksvg background
+    Plasmoid.backgroundHints: isPlanar
+        ? PlasmaCore.Types.NoBackground
+        : (PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground)
+
+    Layout.minimumWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
+    Layout.preferredWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
+    Layout.maximumWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
+    implicitWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
+    Layout.minimumHeight: contentHeight
+    Layout.preferredHeight: contentHeight
+    implicitHeight: contentHeight
 
     Plasma5Support.DataSource {
         id: executable
@@ -71,54 +77,57 @@ PlasmoidItem {
 
     Sensors.Sensor {
         id: cpu
-
         sensorId: "cpu/all/usage"
     }
 
     Sensors.Sensor {
         id: ramUsed
-
         sensorId: "memory/physical/used"
     }
 
     Sensors.Sensor {
         id: ramTotal
-
         sensorId: "memory/physical/total"
     }
 
     Sensors.Sensor {
         id: swapUsed
-
         sensorId: "memory/swap/used"
     }
 
     Sensors.Sensor {
         id: swapTotal
-
         sensorId: "memory/swap/total"
     }
 
     Sensors.Sensor {
         id: netUp
-
         sensorId: "network/all/upload"
     }
 
     Sensors.Sensor {
         id: netDown
-
         sensorId: "network/all/download"
+    }
+
+    // desktop only background that sizes to content
+    KSvg.FrameSvgItem {
+        id: desktopBackground
+        visible: isPlanar
+        imagePath: "widgets/background"
+        anchors.centerIn: parent
+        opacity: Plasmoid.configuration.bgOpacity / 100
+        width: (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2)
+                + margins.left + margins.right
+        height: rowLayout.implicitHeight
+                + Plasmoid.configuration.verticalPadding * 2
+                + margins.top + margins.bottom
     }
 
     RowLayout {
         id: rowLayout
 
-        anchors.fill: parent
-        anchors.leftMargin: Plasmoid.configuration.horizontalPadding
-        anchors.rightMargin: Plasmoid.configuration.horizontalPadding
-        anchors.topMargin: Plasmoid.configuration.verticalPadding
-        anchors.bottomMargin: Plasmoid.configuration.verticalPadding
+        anchors.centerIn: parent
         spacing: Plasmoid.configuration.itemSpacing
 
         MonitorItem {
@@ -170,15 +179,12 @@ PlasmoidItem {
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
         }
-
     }
 
     MouseArea {
-        anchors.fill: root
-        anchors.margins: -10
+        anchors.fill: isPlanar ? desktopBackground : parent
         onClicked: {
-            executable.exec(plasmoid.configuration.launchCommand ?? "plasma-systemmonitor");
+            executable.exec(Plasmoid.configuration.launchCommand ?? "plasma-systemmonitor");
         }
     }
-
 }
