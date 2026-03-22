@@ -26,6 +26,7 @@ KCM.SimpleKCM {
     property string cfg_swapColor: "#ffffff"
     property string cfg_uploadColor: "#ffffff"
     property string cfg_downloadColor: "#ffffff"
+    property alias cfg_netSpeedFormat: netSpeedFormat.currentIndex
     property alias cfg_percentWarningThreshold: percentWarningThreshold.value
     property string cfg_percentWarningColor: "#ffa500"
     property alias cfg_percentCriticalThreshold: percentCriticalThreshold.value
@@ -97,6 +98,7 @@ KCM.SimpleKCM {
                 text: bgOpacity.value + "%"
                 Layout.minimumWidth: Kirigami.Units.gridUnit * 2
             }
+
         }
 
         Item {
@@ -334,6 +336,19 @@ KCM.SimpleKCM {
                 onAccepted: cfg_downloadColor = selectedColor
             }
 
+        }
+
+        Item {
+            Kirigami.FormData.isSection: true
+            Kirigami.FormData.label: i18n("Data Formatting")
+        }
+
+        QQC2.ComboBox {
+            id: netSpeedFormat
+
+            Kirigami.FormData.label: i18n("Network Speed")
+            Layout.fillWidth: true
+            model: [i18n("KB, MB, GB, TB"), i18n("B, KB, MB, GB, TB"), i18n("Kbps, Mbps, Gbps, Tbps"), i18n("bps, Kbps, Mbps, Gbps, Tbps")]
         }
 
         Item {

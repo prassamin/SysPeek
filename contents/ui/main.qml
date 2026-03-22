@@ -12,7 +12,6 @@ PlasmoidItem {
 
     // whether we are on the desktop or in a panel
     readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
-
     // content based dimensions
     readonly property real contentWidth: rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2
     readonly property real contentHeight: rowLayout.implicitHeight + Plasmoid.configuration.verticalPadding * 2
@@ -22,37 +21,53 @@ PlasmoidItem {
     }
 
     function formatBytes(bytes) {
-        if (bytes < 1024)
-            return bytes.toFixed(0) + " B";
-        if (bytes < 1.04858e+06)
-            return (bytes / 1024).toFixed(1) + " KB";
-        if (bytes < 1.07374e+09)
-            return (bytes / 1.04858e+06).toFixed(1) + " MB";
-        return (bytes / 1.07374e+09).toFixed(1) + " GB";
+        let fmt = Plasmoid.configuration.netSpeedFormat;
+        
+        let unitB = (fmt === 2 || fmt === 3) ? "bps" : "B";
+        let unitK = (fmt === 2 || fmt === 3) ? "Kbps" : "KB";
+        let unitM = (fmt === 2 || fmt === 3) ? "Mbps" : "MB";
+        let unitG = (fmt === 2 || fmt === 3) ? "Gbps" : "GB";
+        let unitT = (fmt === 2 || fmt === 3) ? "Tbps" : "TB";
+        
+        let limits = [1024, 1.04858e+06, 1.07374e+09, 1.09951e+12];
+        
+        if (fmt === 1 || fmt === 3) {
+            if (bytes < limits[0]) return bytes.toFixed(0) + " " + unitB;
+            if (bytes < limits[1]) return (bytes / limits[0]).toFixed(1) + " " + unitK;
+            if (bytes < limits[2]) return (bytes / limits[1]).toFixed(1) + " " + unitM;
+            if (bytes < limits[3]) return (bytes / limits[2]).toFixed(1) + " " + unitG;
+            return (bytes / limits[3]).toFixed(1) + " " + unitT;
+        } else {
+            if (bytes < limits[1]) return (bytes / limits[0]).toFixed(1) + " " + unitK;
+            if (bytes < limits[2]) return (bytes / limits[1]).toFixed(1) + " " + unitM;
+            if (bytes < limits[3]) return (bytes / limits[2]).toFixed(1) + " " + unitG;
+            return (bytes / limits[3]).toFixed(1) + " " + unitT;
+        }
     }
 
     function percentColor(val, baseColor) {
         const v = Math.trunc(val);
         if (v >= Plasmoid.configuration.percentCriticalThreshold)
             return Plasmoid.configuration.percentCriticalColor;
+
         if (v >= Plasmoid.configuration.percentWarningThreshold)
             return Plasmoid.configuration.percentWarningColor;
+
         return baseColor;
     }
 
     function speedColor(speed, baseColor) {
         if (speed >= Plasmoid.configuration.speedCriticalThreshold * 1024 * 1024)
             return Plasmoid.configuration.speedCriticalColor;
+
         if (speed >= Plasmoid.configuration.speedWarningThreshold * 1024 * 1024)
             return Plasmoid.configuration.speedWarningColor;
+
         return baseColor;
     }
 
     // on panel plasma draws background on desktop draw using Ksvg background
-    Plasmoid.backgroundHints: isPlanar
-        ? PlasmaCore.Types.NoBackground
-        : (PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground)
-
+    Plasmoid.backgroundHints: isPlanar ? PlasmaCore.Types.NoBackground : (PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground)
     Layout.minimumWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
     Layout.preferredWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
     Layout.maximumWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
@@ -77,51 +92,57 @@ PlasmoidItem {
 
     Sensors.Sensor {
         id: cpu
+
         sensorId: "cpu/all/usage"
     }
 
     Sensors.Sensor {
         id: ramUsed
+
         sensorId: "memory/physical/used"
     }
 
     Sensors.Sensor {
         id: ramTotal
+
         sensorId: "memory/physical/total"
     }
 
     Sensors.Sensor {
         id: swapUsed
+
         sensorId: "memory/swap/used"
     }
 
     Sensors.Sensor {
         id: swapTotal
+
         sensorId: "memory/swap/total"
     }
 
     Sensors.Sensor {
         id: netUp
+
         sensorId: "network/all/upload"
     }
 
     Sensors.Sensor {
         id: netDown
+
         sensorId: "network/all/download"
     }
 
     // desktop only background that sizes to content
     KSvg.FrameSvgItem {
         id: desktopBackground
+
+        property int baseWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2
+        property int baseHeight: rowLayout.implicitHeight + Plasmoid.configuration.verticalPadding * 2
+
         visible: isPlanar
         imagePath: "widgets/background"
         anchors.centerIn: parent
         opacity: Plasmoid.configuration.bgOpacity / 100
-        property int baseWidth: Plasmoid.configuration.useFixedWidth
-                                 ? Plasmoid.configuration.widgetWidth
-                                 : rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2
-        property int baseHeight: rowLayout.implicitHeight
-                                 + Plasmoid.configuration.verticalPadding * 2
         width: baseWidth + margins.left + margins.right
         height: baseHeight + margins.top + margins.bottom
     }
@@ -181,6 +202,7 @@ PlasmoidItem {
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
         }
+
     }
 
     MouseArea {
@@ -189,4 +211,5 @@ PlasmoidItem {
             executable.exec(Plasmoid.configuration.launchCommand ?? "plasma-systemmonitor");
         }
     }
+
 }
