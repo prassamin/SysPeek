@@ -1,0 +1,11 @@
+singleton Theme 1.0 Theme.qml
+Toggle 1.0 Toggle.qml
+SpinBox 1.0 SpinBox.qml
+Slider 1.0 Slider.qml
+TextField 1.0 TextField.qml
+ComboBox 1.0 ComboBox.qml
+Card 1.0 Card.qml
+SectionLabel 1.0 SectionLabel.qml
+Divider 1.0 Divider.qml
+SettingRow 1.0 SettingRow.qml
+ColorSwatch 1.0 ColorSwatch.qml

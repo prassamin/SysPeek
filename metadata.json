@@ -164,7 +164,7 @@
     "Name[vi]": "SysPeek",
     "Name[zh_CN]": "系统快览",
     "Name[zh_TW]": "系統快覽",
-    "Version": "1.2.0",
+    "Version": "1.3.0",
     "Website": "https://github.com/PRASSamin/SysPeek"
   },
   "X-Plasma-API-Minimum-Version": "6.0",

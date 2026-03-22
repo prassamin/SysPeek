@@ -10,6 +10,26 @@ import org.kde.plasma.plasmoid 2.0
 PlasmoidItem {
     id: root
 
+    // override the default "Configure..." action to open our custom window
+    PlasmaCore.Action {
+        id: configureAction
+
+        text: i18n("Configure SysPeek…")
+        icon.name: "configure"
+        onTriggered: settingsWindow.show()
+    }
+
+    Component.onCompleted: {
+        Plasmoid.setInternalAction("configure", configureAction);
+    }
+
+    Settings {
+        id: settingsWindow
+
+        cfg: Plasmoid.configuration
+        meta: Plasmoid.metaData
+    }
+
     // whether we are on the desktop or in a panel
     readonly property bool isPlanar: Plasmoid.formFactor === PlasmaCore.Types.Planar
     // content based dimensions

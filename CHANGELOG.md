@@ -1,7 +1,12 @@
 # CHANGELOG
 
-## [v1.3.0] - Unreleased
+## [v1.3.0] - 2026-03-23
 
+- **Custom Settings Window**: Replaced the default KDE Plasma config dialog with a fully custom frameless dark-themed window featuring sidebar navigation and custom window controls.
+  - **6 Settings Pages**: General, Layout, Typography, Colors, Alerts, and About — each in its own dedicated page file.
+  - **Custom Controls**: Hand-crafted toggle switches, spin boxes with keyboard editing and scroll-wheel support, gauge-style sliders with shimmer animations, combo boxes with edge-safe dropdowns, and color swatches.
+  - **About Page**: Dynamically reads app name, version, description, author, license, and links from `Plasmoid.metaData` — no hardcoded values.
+  - **Modular Architecture**: Extracted all UI components into a reusable `components/` folder with a shared `Theme` singleton, and all pages into a `pages/` folder for maintainability.
 - **Desktop Widget Background**: The widget now renders a native KDE Plasma background frame (`KSvg.FrameSvgItem`) when placed directly on the desktop instead of a panel.
   - **Configurable Opacity**: Added a slider to the settings menu to adjust the opacity of this desktop background (from 0% to 100%).
 - **Flexible Widget Dimensions**: Added a "Use Fixed Width" toggle in settings. The widget can now intelligently resize its width perfectly to its varying content, or stick strictly to a user-defined fixed width.
