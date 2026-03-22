@@ -53,13 +53,13 @@ PlasmoidItem {
         ? PlasmaCore.Types.NoBackground
         : (PlasmaCore.Types.DefaultBackground | PlasmaCore.Types.ConfigurableBackground)
 
-    Layout.minimumWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
-    Layout.preferredWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
-    Layout.maximumWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
-    implicitWidth: Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth
-    Layout.minimumHeight: contentHeight
-    Layout.preferredHeight: contentHeight
-    implicitHeight: contentHeight
+    Layout.minimumWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
+    Layout.preferredWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
+    Layout.maximumWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
+    implicitWidth: isPlanar ? desktopBackground.width : (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : contentWidth)
+    Layout.minimumHeight: isPlanar ? desktopBackground.height : contentHeight
+    Layout.preferredHeight: isPlanar ? desktopBackground.height : contentHeight
+    implicitHeight: isPlanar ? desktopBackground.height : contentHeight
 
     Plasma5Support.DataSource {
         id: executable
@@ -117,11 +117,13 @@ PlasmoidItem {
         imagePath: "widgets/background"
         anchors.centerIn: parent
         opacity: Plasmoid.configuration.bgOpacity / 100
-        width: (Plasmoid.configuration.useFixedWidth ? Plasmoid.configuration.widgetWidth : rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2)
-                + margins.left + margins.right
-        height: rowLayout.implicitHeight
-                + Plasmoid.configuration.verticalPadding * 2
-                + margins.top + margins.bottom
+        property int baseWidth: Plasmoid.configuration.useFixedWidth
+                                 ? Plasmoid.configuration.widgetWidth
+                                 : rowLayout.implicitWidth + Plasmoid.configuration.horizontalPadding * 2
+        property int baseHeight: rowLayout.implicitHeight
+                                 + Plasmoid.configuration.verticalPadding * 2
+        width: baseWidth + margins.left + margins.right
+        height: baseHeight + margins.top + margins.bottom
     }
 
     RowLayout {
