@@ -10,6 +10,8 @@ Item {
     implicitHeight: 36
     Layout.fillWidth: true
 
+    HoverHandler { cursorShape: Qt.IBeamCursor }
+
     Rectangle {
         anchors.fill: parent
         radius: 8
@@ -42,6 +44,8 @@ Item {
         selectedTextColor: "white"
         font.pixelSize: 13
         HoverHandler { cursorShape: Qt.IBeamCursor }
+        Keys.onReturnPressed: focus = false
+        Keys.onEnterPressed: focus = false
         clip: true
 
         Text {

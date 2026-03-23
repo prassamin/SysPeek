@@ -14,11 +14,32 @@ Item {
     implicitWidth: 200
     implicitHeight: 34
 
+    function openPopup() {
+        if (!edgeSafeContainer) return;
+        let pos = comboRoot.mapToItem(edgeSafeContainer, 0, 0);
+        popupLoader.popupX = pos.x;
+        popupLoader.popupY = pos.y + comboRoot.height + 4;
+        popupLoader.popupWidth = comboRoot.width;
+
+        // check if dropdown would overflow bottom
+        let dropH = Math.min(comboRoot.model.length * 32 + 8, 260);
+        if (popupLoader.popupY + dropH > edgeSafeContainer.height - 8)
+            popupLoader.popupY = pos.y - dropH - 4;
+
+        popupLoader.active = true;
+    }
+
+    function closePopup() {
+        popupLoader.active = false;
+    }
+
+    readonly property bool popupVisible: popupLoader.active
+
     Rectangle {
         anchors.fill: parent
         radius: 8
         color: comboMA.containsMouse ? Theme.controlHover : Theme.controlBg
-        border.color: comboPopup.visible ? Theme.accentCol : Theme.controlBorder
+        border.color: comboRoot.popupVisible ? Theme.accentCol : Theme.controlBorder
         border.width: 1
 
         Behavior on color { ColorAnimation { duration: 150 } }
@@ -51,87 +72,111 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: comboPopup.visible = !comboPopup.visible
+        onClicked: {
+            if (comboRoot.popupVisible)
+                comboRoot.closePopup();
+            else
+                comboRoot.openPopup();
+        }
     }
 
-    // dropdown
-    Rectangle {
-        id: comboPopup
-        visible: false
-        width: parent.width
-        radius: 10
-        color: Qt.rgba(0.08, 0.08, 0.12, 1)
-        border.color: Theme.borderCol
-        border.width: 1
-        z: 100
+    // popup is loaded inside edgeSafeContainer so it renders above everything
+    Loader {
+        id: popupLoader
+        active: false
 
-        readonly property real maxHeight: 260
-        height: Math.min(popupCol.implicitHeight + 8, maxHeight)
-        clip: true
+        property real popupX: 0
+        property real popupY: 0
+        property real popupWidth: 200
 
-        // edge-safe: open above if no room below
-        y: {
-            let belowY = comboRoot.height + 4;
-            if (comboRoot.edgeSafeContainer) {
-                let globalBelow = comboRoot.mapToItem(comboRoot.edgeSafeContainer, 0, belowY).y + height;
-                if (globalBelow > comboRoot.edgeSafeContainer.height - 8)
-                    return -height - 4;  // open above
-            }
-            return belowY;           // open below
+        sourceComponent: popupComponent
+        onLoaded: {
+            item.parent = comboRoot.edgeSafeContainer;
         }
+    }
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowColor: "#60000000"
-            shadowBlur: 0.6
-            shadowVerticalOffset: 4
-        }
+    Component {
+        id: popupComponent
 
-        Flickable {
-            id: popupFlick
+        Item {
+            id: popupOverlay
             anchors.fill: parent
-            anchors.margins: 4
-            contentHeight: popupCol.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
+            z: 9999
 
-            QQC2.ScrollBar.vertical: QQC2.ScrollBar {
-                policy: popupFlick.contentHeight > popupFlick.height ? QQC2.ScrollBar.AsNeeded : QQC2.ScrollBar.AlwaysOff
+            // click-outside-to-close
+            MouseArea {
+                anchors.fill: parent
+                onClicked: comboRoot.closePopup()
             }
 
-            Column {
-                id: popupCol
-                width: popupFlick.width
-                spacing: 0
+            Rectangle {
+                id: comboPopup
+                x: popupLoader.popupX
+                y: popupLoader.popupY
+                width: popupLoader.popupWidth
+                radius: 10
+                color: Qt.rgba(0.08, 0.08, 0.12, 1)
+                border.color: Theme.borderCol
+                border.width: 1
 
-                Repeater {
-                    model: comboRoot.model
-                    delegate: Rectangle {
-                        width: popupCol.width
-                        height: 32
-                        radius: 6
-                        color: optMA.containsMouse ? Theme.controlHover : (comboRoot.currentIndex === index ? Theme.activeBg : "transparent")
+                readonly property real maxHeight: 260
+                height: Math.min(popupCol.implicitHeight + 8, maxHeight)
+                clip: true
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            text: modelData
-                            color: comboRoot.currentIndex === index ? Theme.accentCol : Theme.textPrimary
-                            font.pixelSize: 12
-                            font.weight: comboRoot.currentIndex === index ? Font.Medium : Font.Normal
-                        }
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: "#60000000"
+                    shadowBlur: 0.6
+                    shadowVerticalOffset: 4
+                }
 
-                        MouseArea {
-                            id: optMA
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                comboRoot.currentIndex = index;
-                                comboRoot.activated(index);
-                                comboPopup.visible = false;
+                Flickable {
+                    id: popupFlick
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    contentHeight: popupCol.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+
+                    QQC2.ScrollBar.vertical: QQC2.ScrollBar {
+                        policy: popupFlick.contentHeight > popupFlick.height ? QQC2.ScrollBar.AsNeeded : QQC2.ScrollBar.AlwaysOff
+                    }
+
+                    Column {
+                        id: popupCol
+                        width: popupFlick.width
+                        spacing: 0
+
+                        Repeater {
+                            model: comboRoot.model
+                            delegate: Rectangle {
+                                width: popupCol.width
+                                height: 32
+                                radius: 6
+                                color: optMA.containsMouse ? Theme.controlHover : (comboRoot.currentIndex === index ? Theme.activeBg : "transparent")
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+                                    text: modelData
+                                    color: comboRoot.currentIndex === index ? Theme.accentCol : Theme.textPrimary
+                                    font.pixelSize: 12
+                                    font.weight: comboRoot.currentIndex === index ? Font.Medium : Font.Normal
+                                }
+
+                                MouseArea {
+                                    id: optMA
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        comboRoot.currentIndex = index;
+                                        comboRoot.activated(index);
+                                        comboRoot.closePopup();
+                                    }
+                                }
                             }
                         }
                     }

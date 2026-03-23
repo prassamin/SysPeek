@@ -14,9 +14,9 @@ PlasmoidItem {
     PlasmaCore.Action {
         id: configureAction
 
-        text: i18n("Configure SysPeek…")
+        text: i18n("SysPeek Settings")
         icon.name: "configure"
-        onTriggered: settingsWindow.show()
+        onTriggered: { settingsWindow.show(); settingsWindow.raise(); settingsWindow.requestActivate() }
     }
 
     Component.onCompleted: {
@@ -225,11 +225,22 @@ PlasmoidItem {
 
     }
 
+    // action types: 0 = Launch App, 1 = Open URL, 2 = Run Command, 3 = Do Nothing
+    function performClickAction() {
+        var action = Plasmoid.configuration.leftClickAction;
+        if (action === 3) return;
+        var value = action === 0 ? Plasmoid.configuration.leftClickAppValue
+                  : action === 1 ? Plasmoid.configuration.leftClickUrlValue
+                  : Plasmoid.configuration.leftClickCmdValue;
+        if (!value) return;
+        if (action === 1) Qt.openUrlExternally(value);
+        else executable.exec(value);
+    }
+
     MouseArea {
         anchors.fill: isPlanar ? desktopBackground : parent
-        onClicked: {
-            executable.exec(Plasmoid.configuration.launchCommand ?? "plasma-systemmonitor");
-        }
+        acceptedButtons: Qt.LeftButton
+        onClicked: performClickAction()
     }
 
 }

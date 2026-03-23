@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [v1.4.0] - Unreleased
+
+### Added
+
+- **Configurable Click Actions**: Left click now supports 4 action types — Launch Application, Open URL, Run Command, or Do Nothing. Each action type preserves its own input value independently when switching between types.
+  - **Application Picker**: A built-in app chooser dialog scans all installed applications (including Flatpak and Snap) and presents them in a searchable list with icons for quick selection.
+
+### Fixed
+
+- **Dropdown Z-Order**: Custom combo box dropdowns now render above all other content by reparenting to the window root, preventing options from being obscured by sibling elements.
+
 ## [v1.3.0] - 2026-03-23
 
 - **Custom Settings Window**: Replaced the default KDE Plasma config dialog with a fully custom frameless dark-themed window featuring sidebar navigation and custom window controls.
@@ -10,7 +21,7 @@
 - **Desktop Widget Background**: The widget now renders a native KDE Plasma background frame (`KSvg.FrameSvgItem`) when placed directly on the desktop instead of a panel.
   - **Configurable Opacity**: Added a slider to the settings menu to adjust the opacity of this desktop background (from 0% to 100%).
 - **Flexible Widget Dimensions**: Added a "Use Fixed Width" toggle in settings. The widget can now intelligently resize its width perfectly to its varying content, or stick strictly to a user-defined fixed width.
-- **Improved Adaptive Layout**: The internal spacing logic now seamlessly adapts its bounds and mouse-click areas dynamically depending on whether the widget is placed in a thin Plasma panel or directly on the desktop screen.
+- **Improved Adaptive Layout**: The internal spacing logic now adapts its bounds and mouse-click areas dynamically depending on whether the widget is placed in a thin Plasma panel or directly on the desktop screen.
 - **Data Formatting Customization**: Users can now select from 4 distinct auto-scaling formatting strategies for network speeds (`KB, MB, GB, TB`, `B, KB, MB, GB, TB`, `Kbps, Mbps, Gbps, Tbps`, and `bps, Kbps, Mbps, Gbps, Tbps`).
   - Bit-rate formats (`bps`, `Kbps`, etc.) rigorously apply auto-scaling thresholds against their underlying Byte boundaries to mathematically prevent premature "Kilo" jumps (e.g. 188 Bytes/sec correctly displays as `1504 bps` without jumping to `1.5 Kbps`).
 

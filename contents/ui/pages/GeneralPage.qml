@@ -9,6 +9,9 @@ Flickable {
     property var cfg
     property Item edgeSafeContainer: null
 
+    // action type labels
+    readonly property var actionTypes: ["Launch Application", "Open URL", "Run Command", "Do Nothing"]
+
     contentHeight: generalCol.implicitHeight + 40
     clip: true
     boundsBehavior: Flickable.StopAtBounds
@@ -19,15 +22,92 @@ Flickable {
         anchors { left: parent.left; right: parent.right; top: parent.top; margins: 24 }
         spacing: 18
 
-        Components.SectionLabel { text: "LAUNCH" }
+        Components.SectionLabel { text: "CLICK ACTIONS" }
 
+        // ── left click ──
         Components.Card {
             Layout.fillWidth: true
-            Components.TextField {
+
+            Components.SettingRow {
+                label: "Left Click"
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    model: page.actionTypes
+                    currentIndex: cfg.leftClickAction
+                    onActivated: function(i) { cfg.leftClickAction = i }
+                }
+            }
+            Components.Divider {
+                visible: cfg.leftClickAction !== 3
+            }
+            // ── Launch Application ──
+            ColumnLayout {
                 Layout.fillWidth: true
-                text: cfg.launchCommand
-                placeholderText: "e.g. plasma-systemmonitor"
-                onTextChanged: cfg.launchCommand = text
+                visible: cfg.leftClickAction === 0
+                spacing: 4
+
+                Text {
+                    text: "Command"
+                    color: Components.Theme.textSecondary
+                    font.pixelSize: 11
+                    Layout.leftMargin: 2
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Components.TextField {
+                        Layout.fillWidth: true
+                        text: cfg.leftClickAppValue
+                        placeholderText: "e.g. plasma-systemmonitor"
+                        onTextChanged: cfg.leftClickAppValue = text
+                    }
+
+                    Components.AppChooser {
+                        edgeSafeContainer: page.edgeSafeContainer
+                        onAppSelected: function(cmd) { cfg.leftClickAppValue = cmd }
+                    }
+                }
+            }
+
+            // ── Open URL ──
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: cfg.leftClickAction === 1
+                spacing: 4
+
+                Text {
+                    text: "URL"
+                    color: Components.Theme.textSecondary
+                    font.pixelSize: 11
+                    Layout.leftMargin: 2
+                }
+                Components.TextField {
+                    Layout.fillWidth: true
+                    text: cfg.leftClickUrlValue
+                    placeholderText: "e.g. https://example.com"
+                    onTextChanged: cfg.leftClickUrlValue = text
+                }
+            }
+
+            // ── Run Command ──
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: cfg.leftClickAction === 2
+                spacing: 4
+
+                Text {
+                    text: "Command"
+                    color: Components.Theme.textSecondary
+                    font.pixelSize: 11
+                    Layout.leftMargin: 2
+                }
+                Components.TextField {
+                    Layout.fillWidth: true
+                    text: cfg.leftClickCmdValue
+                    placeholderText: "e.g. notify-send 'Hello'"
+                    onTextChanged: cfg.leftClickCmdValue = text
+                }
             }
         }
 

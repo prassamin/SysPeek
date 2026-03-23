@@ -13,10 +13,6 @@ RowLayout {
         color: Theme.textPrimary
         font.pixelSize: 13
         Layout.fillWidth: true
-
-        HoverHandler {
-            cursorShape: Qt.IBeamCursor
-        }
     }
 
     Row {

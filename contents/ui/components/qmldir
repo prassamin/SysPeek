@@ -9,3 +9,4 @@ SectionLabel 1.0 SectionLabel.qml
 Divider 1.0 Divider.qml
 SettingRow 1.0 SettingRow.qml
 ColorSwatch 1.0 ColorSwatch.qml
+AppChooser 1.0 AppChooser.qml

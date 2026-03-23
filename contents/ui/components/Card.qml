@@ -9,6 +9,16 @@ Rectangle {
     radius: 10
     implicitHeight: container.implicitHeight + 32
 
+    // click on non-interactive areas defocuses text inputs
+    MouseArea {
+        anchors.fill: parent
+        propagateComposedEvents: true
+        onPressed: function(mouse) {
+            forceActiveFocus()
+            mouse.accepted = false
+        }
+    }
+
     ColumnLayout {
         id: container
         anchors.fill: parent

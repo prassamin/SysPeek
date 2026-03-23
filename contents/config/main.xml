@@ -7,9 +7,21 @@
     <kcfgfile name="plasmarc"/>
 
     <group name="General">
-        <entry name="launchCommand" type="String">
-            <label>Launch Command</label>
+        <entry name="leftClickAction" type="Int">
+            <label>Left Click Action</label>
+            <default>0</default>
+        </entry>
+        <entry name="leftClickAppValue" type="String">
+            <label>Left Click App Command</label>
             <default>plasma-systemmonitor</default>
+        </entry>
+        <entry name="leftClickUrlValue" type="String">
+            <label>Left Click URL</label>
+            <default></default>
+        </entry>
+        <entry name="leftClickCmdValue" type="String">
+            <label>Left Click Command</label>
+            <default></default>
         </entry>
         <entry name="itemSpacing" type="Int">
             <label>Item Spacing</label>

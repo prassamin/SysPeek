@@ -14,6 +14,8 @@ Window {
     title: "SysPeek"
     width: 720
     height: 560
+    minimumWidth: 580
+    minimumHeight: 420
     color: "transparent"
     flags: Qt.FramelessWindowHint | Qt.Dialog
 
@@ -39,10 +41,6 @@ Window {
         anchors.fill: parent
         focus: true
 
-        TapHandler {
-            onTapped: bg.forceActiveFocus()
-        }
-
     Rectangle {
         anchors.fill: parent
         radius: 12
@@ -50,6 +48,12 @@ Window {
         border.color: Components.Theme.borderCol
         border.width: 1
         layer.enabled: true
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+            onPressed: function(mouse) { bg.forceActiveFocus(); mouse.accepted = false }
+        }
 
         // ── title bar ──
         Rectangle {
@@ -59,6 +63,12 @@ Window {
             anchors.right: parent.right
             height: 48
             color: "transparent"
+
+            MouseArea {
+                anchors.fill: parent
+                propagateComposedEvents: true
+                onPressed: function(mouse) { bg.forceActiveFocus(); mouse.accepted = false }
+            }
 
             DragHandler {
                 target: null
@@ -211,6 +221,12 @@ Window {
                 Layout.preferredWidth: 170
                 color: Qt.rgba(1, 1, 1, 0.02)
 
+                MouseArea {
+                    anchors.fill: parent
+                    propagateComposedEvents: true
+                    onPressed: function(mouse) { bg.forceActiveFocus(); mouse.accepted = false }
+                }
+
                 Rectangle {
                     anchors.right: parent.right
                     anchors.top: parent.top
@@ -319,5 +335,56 @@ Window {
             }
         }
     }
+
+    }
+
+    // ═══════════════════════════════════════════════
+    //  EDGE RESIZE HANDLES
+    // ═══════════════════════════════════════════════
+
+    readonly property int _edge: 6
+
+    // edges
+    MouseArea {
+        z: 999; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
+        height: root._edge; cursorShape: Qt.SizeVerCursor
+        onPressed: root.startSystemResize(Qt.TopEdge)
+    }
+    MouseArea {
+        z: 999; anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
+        height: root._edge; cursorShape: Qt.SizeVerCursor
+        onPressed: root.startSystemResize(Qt.BottomEdge)
+    }
+    MouseArea {
+        z: 999; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
+        width: root._edge; cursorShape: Qt.SizeHorCursor
+        onPressed: root.startSystemResize(Qt.LeftEdge)
+    }
+    MouseArea {
+        z: 999; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom
+        width: root._edge; cursorShape: Qt.SizeHorCursor
+        onPressed: root.startSystemResize(Qt.RightEdge)
+    }
+
+    // corners (on top of edges)
+    MouseArea {
+        z: 1000; anchors.top: parent.top; anchors.left: parent.left
+        width: root._edge * 2; height: root._edge * 2; cursorShape: Qt.SizeFDiagCursor
+        onPressed: root.startSystemResize(Qt.TopEdge | Qt.LeftEdge)
+    }
+    MouseArea {
+        z: 1000; anchors.top: parent.top; anchors.right: parent.right
+        width: root._edge * 2; height: root._edge * 2; cursorShape: Qt.SizeBDiagCursor
+        onPressed: root.startSystemResize(Qt.TopEdge | Qt.RightEdge)
+    }
+    MouseArea {
+        z: 1000; anchors.bottom: parent.bottom; anchors.left: parent.left
+        width: root._edge * 2; height: root._edge * 2; cursorShape: Qt.SizeBDiagCursor
+        onPressed: root.startSystemResize(Qt.BottomEdge | Qt.LeftEdge)
+    }
+    MouseArea {
+        z: 1000; anchors.bottom: parent.bottom; anchors.right: parent.right
+        width: root._edge * 2; height: root._edge * 2; cursorShape: Qt.SizeFDiagCursor
+        onPressed: root.startSystemResize(Qt.BottomEdge | Qt.RightEdge)
     }
 }
