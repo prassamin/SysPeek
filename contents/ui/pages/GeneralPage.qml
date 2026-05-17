@@ -141,6 +141,26 @@ Flickable {
                     onActivated: function(i) { cfg.netSpeedFormat = i }
                 }
             }
+            Components.Divider {}
+            Components.SettingRow {
+                label: "RAM Display"
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    model: ["Percentage", "Value"]
+                    currentIndex: cfg.ramDisplayMode
+                    onActivated: function(i) { cfg.ramDisplayMode = i }
+                }
+            }
+            Components.Divider {}
+            Components.SettingRow {
+                label: "Swap Display"
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    model: ["Percentage", "Value"]
+                    currentIndex: cfg.swapDisplayMode
+                    onActivated: function(i) { cfg.swapDisplayMode = i }
+                }
+            }
         }
 
         Components.SectionLabel { text: "BEHAVIOR" }

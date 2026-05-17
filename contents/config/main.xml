@@ -47,6 +47,10 @@
             <label>Font Family</label>
             <default></default>
         </entry>
+        <entry name="showIcons" type="Bool">
+            <label>Show Icons</label>
+            <default>true</default>
+        </entry>
         <entry name="showCpu" type="Bool">
             <label>Show CPU</label>
             <default>true</default>
@@ -141,6 +145,14 @@
         </entry>
         <entry name="netSpeedFormat" type="Int">
             <label>Network Speed Format</label>
+            <default>0</default>
+        </entry>
+        <entry name="ramDisplayMode" type="Int">
+            <label>RAM Display Mode</label>
+            <default>0</default>
+        </entry>
+        <entry name="swapDisplayMode" type="Int">
+            <label>Swap Display Mode</label>
             <default>0</default>
         </entry>
         <entry name="showTooltips" type="Bool">

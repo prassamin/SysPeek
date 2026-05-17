@@ -40,6 +40,11 @@ Flickable {
 
         Components.Card {
             Layout.fillWidth: true
+            Components.SettingRow {
+                label: "Show Icons"
+                Components.Toggle { checked: cfg.showIcons; onToggled: cfg.showIcons = checked }
+            }
+            Components.Divider {}
             Components.SettingRow { label: "Item Spacing";      Components.SpinBox { from: 0; to: 50; value: cfg.itemSpacing;     onValueModified: cfg.itemSpacing = value } }
             Components.Divider {}
             Components.SettingRow { label: "Icon-Label Spacing"; Components.SpinBox { from: 0; to: 20; value: cfg.iconTextSpacing; onValueModified: cfg.iconTextSpacing = value } }

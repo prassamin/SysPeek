@@ -244,6 +244,7 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 let rows = [];
@@ -265,6 +266,7 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 let rows = [];
@@ -281,11 +283,17 @@ PlasmoidItem {
         MonitorItem {
             visible: Plasmoid.configuration.showRam
             icon: Qt.resolvedUrl("../icons/memory.svg")
-            label: (ramUsed.value !== undefined && ramTotal.value !== undefined) ? percent(ramUsed.value, ramTotal.value) : "N/A"
+            label: {
+                if (ramUsed.value === undefined || ramTotal.value === undefined) return "N/A";
+                return Plasmoid.configuration.ramDisplayMode === 0 
+                    ? percent(ramUsed.value, ramTotal.value) 
+                    : formatBytes(ramUsed.value);
+            }
             color: percentColor((ramUsed.value / ramTotal.value * 100), Plasmoid.configuration.ramColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 if (ramUsed.value === undefined || ramTotal.value === undefined) return "";
@@ -302,11 +310,17 @@ PlasmoidItem {
         MonitorItem {
             visible: Plasmoid.configuration.showSwap
             icon: Qt.resolvedUrl("../icons/swap.svg")
-            label: (swapUsed.value !== undefined && swapTotal.value !== undefined) ? percent(swapUsed.value, swapTotal.value) : "N/A"
+            label: {
+                if (swapUsed.value === undefined || swapTotal.value === undefined) return "N/A";
+                return Plasmoid.configuration.swapDisplayMode === 0 
+                    ? percent(swapUsed.value, swapTotal.value) 
+                    : formatBytes(swapUsed.value);
+            }
             color: percentColor((swapUsed.value / swapTotal.value * 100), Plasmoid.configuration.swapColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 if (swapUsed.value === undefined || swapTotal.value === undefined) return "";
@@ -328,6 +342,7 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 let rows = [];
@@ -347,6 +362,7 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
             tooltipText: {
                 let rows = [];
