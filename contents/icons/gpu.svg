@@ -1,0 +1,11 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="2" y="6" width="20" height="12" rx="2" />
+  <path d="M6 10v4" />
+  <path d="M10 10v4" />
+  <path d="M14 10v4" />
+  <path d="M18 10v4" />
+  <path d="M2 10h20" />
+  <path d="M2 14h20" />
+  <path d="M12 6v2" />
+  <path d="M12 16v2" />
+</svg>

@@ -112,8 +112,14 @@ PlasmoidItem {
 
     Sensors.Sensor {
         id: cpu
-
+ 
         sensorId: "cpu/all/usage"
+    }
+ 
+    Sensors.Sensor {
+        id: gpu
+ 
+        sensorId: "gpu/all/usage"
     }
 
     Sensors.Sensor {
@@ -152,6 +158,18 @@ PlasmoidItem {
         sensorId: "network/all/download"
     }
 
+    Sensors.Sensor {
+        id: cpuTemp
+
+        sensorId: "cpu/all/temperature"
+    }
+
+    Sensors.Sensor {
+        id: gpuTemp
+
+        sensorId: "gpu/all/temperature"
+    }
+
     // desktop only background that sizes to content
     KSvg.FrameSvgItem {
         id: desktopBackground
@@ -178,6 +196,16 @@ PlasmoidItem {
             icon: Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
             color: percentColor(cpu.value, Plasmoid.configuration.cpuColor)
+            iconTextSpacing: Plasmoid.configuration.iconTextSpacing
+            fontSize: Plasmoid.configuration.fontSize
+            fontFamily: Plasmoid.configuration.fontFamily
+        }
+
+        MonitorItem {
+            visible: Plasmoid.configuration.showGpu
+            icon: Qt.resolvedUrl("../icons/gpu.svg")
+            label: gpu.value !== undefined ? Math.round(gpu.value) + "%" : "N/A"
+            color: percentColor(gpu.value, Plasmoid.configuration.gpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily

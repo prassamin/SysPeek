@@ -117,6 +117,8 @@ Flickable {
             Layout.fillWidth: true
             Components.SettingRow { label: "CPU";            Components.Toggle { checked: cfg.showCpu;      onToggled: cfg.showCpu = checked } }
             Components.Divider {}
+            Components.SettingRow { label: "GPU";            Components.Toggle { checked: cfg.showGpu;      onToggled: cfg.showGpu = checked } }
+            Components.Divider {}
             Components.SettingRow { label: "RAM";            Components.Toggle { checked: cfg.showRam;      onToggled: cfg.showRam = checked } }
             Components.Divider {}
             Components.SettingRow { label: "Swap";           Components.Toggle { checked: cfg.showSwap;     onToggled: cfg.showSwap = checked } }

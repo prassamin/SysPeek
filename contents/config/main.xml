@@ -51,6 +51,10 @@
             <label>Show CPU</label>
             <default>true</default>
         </entry>
+        <entry name="showGpu" type="Bool">
+            <label>Show GPU</label>
+            <default>true</default>
+        </entry>
         <entry name="showRam" type="Bool">
             <label>Show RAM</label>
             <default>true</default>
@@ -81,6 +85,10 @@
         </entry>
         <entry name="cpuColor" type="Color">
             <label>CPU Color</label>
+            <default>#ffffff</default>
+        </entry>
+        <entry name="gpuColor" type="Color">
+            <label>GPU Color</label>
             <default>#ffffff</default>
         </entry>
         <entry name="ramColor" type="Color">
