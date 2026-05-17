@@ -204,6 +204,18 @@ PlasmoidItem {
     }
 
     Sensors.Sensor {
+        id: totalUploadedBytes
+
+        sensorId: "network/all/totalUpload"
+    }
+
+    Sensors.Sensor {
+        id: totalDownloadedBytes
+
+        sensorId: "network/all/totalDownload"
+    }
+
+    Sensors.Sensor {
         id: cpuTemp
 
         sensorId: "cpu/all/temperature"
@@ -349,7 +361,9 @@ PlasmoidItem {
                 if (netUp.value !== undefined) {
                     rows.push(["Current:", formatBytes(netUp.value) + "/s"]);
                 }
-                rows.push(["Total Up:", formatBytes(totalUploadedBytes)]);
+                if (totalUploadedBytes.value !== undefined) {
+                    rows.push(["Total Up:", formatBytes(totalUploadedBytes.value)]);
+                }
                 return makeTooltipHtml("UPLOAD SPEED", speedColor(netUp.value, Plasmoid.configuration.uploadColor), rows);
             }
         }
@@ -369,7 +383,9 @@ PlasmoidItem {
                 if (netDown.value !== undefined) {
                     rows.push(["Current:", formatBytes(netDown.value) + "/s"]);
                 }
-                rows.push(["Total Down:", formatBytes(totalDownloadedBytes)]);
+                if (totalDownloadedBytes.value !== undefined) {
+                    rows.push(["Total Down:", formatBytes(totalDownloadedBytes.value)]);
+                }
                 return makeTooltipHtml("DOWNLOAD SPEED", speedColor(netDown.value, Plasmoid.configuration.downloadColor), rows);
             }
         }
