@@ -16,6 +16,7 @@ Flickable {
     QQC2.ScrollBar.vertical: QQC2.ScrollBar { policy: QQC2.ScrollBar.AsNeeded }
 
     ColorDialog { id: cpuDlg;      title: "CPU";      selectedColor: cfg.cpuColor;      onAccepted: cfg.cpuColor = selectedColor }
+    ColorDialog { id: gpuDlg;      title: "GPU";      selectedColor: cfg.gpuColor;      onAccepted: cfg.gpuColor = selectedColor }
     ColorDialog { id: ramDlg;      title: "RAM";      selectedColor: cfg.ramColor;      onAccepted: cfg.ramColor = selectedColor }
     ColorDialog { id: swapDlg;     title: "Swap";     selectedColor: cfg.swapColor;     onAccepted: cfg.swapColor = selectedColor }
     ColorDialog { id: uploadDlg;   title: "Upload";   selectedColor: cfg.uploadColor;   onAccepted: cfg.uploadColor = selectedColor }
@@ -34,6 +35,11 @@ Flickable {
             Components.SettingRow {
                 label: "CPU"
                 Components.ColorSwatch { colorValue: cfg.cpuColor; onClicked: cpuDlg.open() }
+            }
+            Components.Divider {}
+            Components.SettingRow {
+                label: "GPU"
+                Components.ColorSwatch { colorValue: cfg.gpuColor; onClicked: gpuDlg.open() }
             }
             Components.Divider {}
             Components.SettingRow {

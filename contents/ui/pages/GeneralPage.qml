@@ -117,6 +117,8 @@ Flickable {
             Layout.fillWidth: true
             Components.SettingRow { label: "CPU";            Components.Toggle { checked: cfg.showCpu;      onToggled: cfg.showCpu = checked } }
             Components.Divider {}
+            Components.SettingRow { label: "GPU";            Components.Toggle { checked: cfg.showGpu;      onToggled: cfg.showGpu = checked } }
+            Components.Divider {}
             Components.SettingRow { label: "RAM";            Components.Toggle { checked: cfg.showRam;      onToggled: cfg.showRam = checked } }
             Components.Divider {}
             Components.SettingRow { label: "Swap";           Components.Toggle { checked: cfg.showSwap;     onToggled: cfg.showSwap = checked } }
@@ -138,6 +140,36 @@ Flickable {
                     currentIndex: cfg.netSpeedFormat
                     onActivated: function(i) { cfg.netSpeedFormat = i }
                 }
+            }
+            Components.Divider {}
+            Components.SettingRow {
+                label: "RAM Display"
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    model: ["Percentage", "Value"]
+                    currentIndex: cfg.ramDisplayMode
+                    onActivated: function(i) { cfg.ramDisplayMode = i }
+                }
+            }
+            Components.Divider {}
+            Components.SettingRow {
+                label: "Swap Display"
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    model: ["Percentage", "Value"]
+                    currentIndex: cfg.swapDisplayMode
+                    onActivated: function(i) { cfg.swapDisplayMode = i }
+                }
+            }
+        }
+
+        Components.SectionLabel { text: "BEHAVIOR" }
+
+        Components.Card {
+            Layout.fillWidth: true
+            Components.SettingRow {
+                label: "Show Tooltips"
+                Components.Toggle { checked: cfg.showTooltips; onToggled: cfg.showTooltips = checked }
             }
         }
     }
