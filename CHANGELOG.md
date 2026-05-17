@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [v1.4.0] - Unreleased
+## [v1.4.0] - 2026-05-17
 
 ### Added
 
@@ -10,6 +10,7 @@
 - **GPU Color Customization**: Full support for custom coloring and dynamic thresholding (Warning/Critical) for the new GPU monitor.
 - **Configurable Click Actions**: Left click now supports 4 action types — Launch Application, Open URL, Run Command, or Do Nothing. Each action type preserves its own input value independently when switching between types.
   - **Application Picker**: A built-in app chooser dialog scans all installed applications (including Flatpak and Snap) and presents them in a searchable list with icons for quick selection.
+- **Premium Tooltips**: Replaced plain default tooltips with gorgeous, glassmorphic dark-theme card tooltips for all monitor items.
 
 ### Fixed
 
