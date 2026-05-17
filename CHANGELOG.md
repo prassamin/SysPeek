@@ -4,8 +4,8 @@
 
 ### Added
 
-- **GPU Monitoring**: Introduced a new GPU usage counter that tracks aggregate GPU load across all detected hardware using KDE's system statistics daemon.
-- **Value-Based Display Mode**: RAM and Swap monitors now support a configurable display mode, allowing users to switch between traditional percentage-based usage and formatted raw byte values (e.g., 4.5 GB). This can be toggled independently for each counter in the "Data Format" settings.
+- **GPU Monitoring** ([#6](https://github.com/prassamin/SysPeek/issues/6)): Introduced a new GPU usage counter that tracks aggregate GPU load across all detected hardware using KDE's system statistics daemon.
+- **Value-Based Display Mode** ([#6](https://github.com/prassamin/SysPeek/issues/6)): RAM and Swap monitors now support a configurable display mode, allowing users to switch between traditional percentage-based usage and formatted raw byte values (e.g., 4.5 GB). This can be toggled independently for each counter in the "Data Format" settings.
 - **Global Icon Toggle**: Added an option in the "Layout" settings to hide icons globally, enabling a more compact, text-only appearance.
 - **GPU Color Customization**: Full support for custom coloring and dynamic thresholding (Warning/Critical) for the new GPU monitor.
 - **Configurable Click Actions**: Left click now supports 4 action types — Launch Application, Open URL, Run Command, or Do Nothing. Each action type preserves its own input value independently when switching between types.
