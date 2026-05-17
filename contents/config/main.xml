@@ -143,5 +143,9 @@
             <label>Network Speed Format</label>
             <default>0</default>
         </entry>
+        <entry name="showTooltips" type="Bool">
+            <label>Show Tooltips</label>
+            <default>true</default>
+        </entry>
     </group>
 </kcfg>

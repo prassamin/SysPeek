@@ -40,6 +40,51 @@ PlasmoidItem {
         return total > 0 ? Math.round(val / total * 100) + "%" : "N/A";
     }
 
+    function formatRichValue(valueString) {
+        if (!valueString) return "";
+        let parts = valueString.trim().split(/\s+/);
+        if (parts.length === 2) {
+            return `
+                <b>${parts[0]}</b>
+                <span style='color: #94a3b8; font-size: 9px; font-weight: normal;'>
+                    ${parts[1]}
+                </span>
+            `.trim();
+        }
+        return `<b>${valueString}</b>`;
+    }
+
+    function makeTooltipHtml(title, color, rows) {
+        let font = (Plasmoid.configuration.fontFamily !== "") ? Plasmoid.configuration.fontFamily : "sans-serif";
+        
+        let tableRows = "";
+        for (let i = 0; i < rows.length; i++) {
+            tableRows += `<tr><td style='color:#94a3b8; font-size:11px; padding:3px 20px 3px 0;'>${rows[i][0]}</td><td style='padding:3px 0; font-size:11px;'>${formatRichValue(rows[i][1])}</td></tr>`;
+        }
+
+        return `
+            <div style='font-family: "${font}", sans-serif; min-width: 150px;'>
+                <table border='0' cellspacing='0' cellpadding='0'>
+                    <tr>
+                        <!-- Left Accent Bar Pill -->
+                        <td style='width: 3px; background-color: ${color};'></td>
+                        
+                        <!-- Right Content Cell -->
+                        <td style='padding-left: 12px; vertical-align: top;'>
+                            <!-- Dynamic Accent Header Title -->
+                            <div style='font-size: 10px; font-weight: 800; color: ${color}; letter-spacing: 1.2px;'>${title}</div>
+
+                            <!-- Key-Value Grid -->
+                            <table border='0' cellspacing='0' cellpadding='0'>
+                                ${tableRows}
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        `;
+    }
+
     function formatBytes(bytes) {
         let fmt = Plasmoid.configuration.netSpeedFormat;
         
@@ -199,6 +244,17 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                let rows = [];
+                if (cpu.value !== undefined) {
+                    rows.push(["Usage:", Math.round(cpu.value) + " %"]);
+                }
+                if (cpuTemp.value !== undefined && cpuTemp.value > 0) {
+                    rows.push(["Temp:", Math.round(cpuTemp.value) + " °C"]);
+                }
+                return makeTooltipHtml("CPU MONITOR", percentColor(cpu.value, Plasmoid.configuration.cpuColor), rows);
+            }
         }
 
         MonitorItem {
@@ -209,6 +265,17 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                let rows = [];
+                if (gpu.value !== undefined) {
+                    rows.push(["Usage:", Math.round(gpu.value) + " %"]);
+                }
+                if (gpuTemp.value !== undefined && gpuTemp.value > 0) {
+                    rows.push(["Temp:", Math.round(gpuTemp.value) + " °C"]);
+                }
+                return makeTooltipHtml("GPU MONITOR", percentColor(gpu.value, Plasmoid.configuration.gpuColor), rows);
+            }
         }
 
         MonitorItem {
@@ -219,6 +286,17 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                if (ramUsed.value === undefined || ramTotal.value === undefined) return "";
+                let rows = [
+                    ["Usage:", percent(ramUsed.value, ramTotal.value).replace("%", " %")],
+                    ["Used:", formatBytes(ramUsed.value)],
+                    ["Available:", formatBytes(ramTotal.value - ramUsed.value)],
+                    ["Total:", formatBytes(ramTotal.value)]
+                ];
+                return makeTooltipHtml("RAM MONITOR", percentColor((ramUsed.value / ramTotal.value * 100), Plasmoid.configuration.ramColor), rows);
+            }
         }
 
         MonitorItem {
@@ -229,6 +307,17 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                if (swapUsed.value === undefined || swapTotal.value === undefined) return "";
+                let rows = [
+                    ["Usage:", percent(swapUsed.value, swapTotal.value).replace("%", " %")],
+                    ["Used:", formatBytes(swapUsed.value)],
+                    ["Available:", formatBytes(swapTotal.value - swapUsed.value)],
+                    ["Total:", formatBytes(swapTotal.value)]
+                ];
+                return makeTooltipHtml("SWAP MONITOR", percentColor((swapUsed.value / swapTotal.value * 100), Plasmoid.configuration.swapColor), rows);
+            }
         }
 
         MonitorItem {
@@ -239,6 +328,15 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                let rows = [];
+                if (netUp.value !== undefined) {
+                    rows.push(["Current:", formatBytes(netUp.value) + "/s"]);
+                }
+                rows.push(["Total Up:", formatBytes(totalUploadedBytes)]);
+                return makeTooltipHtml("UPLOAD SPEED", speedColor(netUp.value, Plasmoid.configuration.uploadColor), rows);
+            }
         }
 
         MonitorItem {
@@ -249,6 +347,15 @@ PlasmoidItem {
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
+            showTooltips: Plasmoid.configuration.showTooltips
+            tooltipText: {
+                let rows = [];
+                if (netDown.value !== undefined) {
+                    rows.push(["Current:", formatBytes(netDown.value) + "/s"]);
+                }
+                rows.push(["Total Down:", formatBytes(totalDownloadedBytes)]);
+                return makeTooltipHtml("DOWNLOAD SPEED", speedColor(netDown.value, Plasmoid.configuration.downloadColor), rows);
+            }
         }
 
     }

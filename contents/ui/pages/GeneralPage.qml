@@ -142,5 +142,15 @@ Flickable {
                 }
             }
         }
+
+        Components.SectionLabel { text: "BEHAVIOR" }
+
+        Components.Card {
+            Layout.fillWidth: true
+            Components.SettingRow {
+                label: "Show Tooltips"
+                Components.Toggle { checked: cfg.showTooltips; onToggled: cfg.showTooltips = checked }
+            }
+        }
     }
 }
