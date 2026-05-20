@@ -1,7 +1,7 @@
+import "../components" as Components
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
-import "../components" as Components
 
 Flickable {
     id: page
@@ -9,7 +9,6 @@ Flickable {
     property var cfg
     property var meta
     property Item edgeSafeContainer: null
-
     // extract metadata
     readonly property string appName: meta ? meta.name : "SysPeek"
     readonly property string appVersion: meta ? meta.version : ""
@@ -26,8 +25,15 @@ Flickable {
 
     ColumnLayout {
         id: aboutCol
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 24 }
+
         spacing: 20
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: parent.top
+            margins: 24
+        }
 
         // ── hero section ──
         Item {
@@ -40,22 +46,41 @@ Flickable {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: -20
-                width: 180; height: 180; radius: 90
+                width: 180
+                height: 180
+                radius: 90
+
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.08) }
-                    GradientStop { position: 1.0; color: "transparent" }
+                    GradientStop {
+                        position: 0
+                        color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.08)
+                    }
+
+                    GradientStop {
+                        position: 1
+                        color: "transparent"
+                    }
+
                 }
+
             }
 
             ColumnLayout {
                 id: heroCol
-                anchors { left: parent.left; right: parent.right; top: parent.top }
+
                 spacing: 10
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    top: parent.top
+                }
 
                 // logo
                 Item {
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 72; Layout.preferredHeight: 72
+                    Layout.preferredWidth: 72
+                    Layout.preferredHeight: 72
 
                     Rectangle {
                         anchors.fill: parent
@@ -66,12 +91,25 @@ Flickable {
 
                         // top shimmer
                         Rectangle {
-                            anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
-                            height: parent.height * 0.5; radius: parent.radius
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: parent.height * 0.5
+                            radius: parent.radius
+
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.06) }
-                                GradientStop { position: 1.0; color: "transparent" }
+                                GradientStop {
+                                    position: 0
+                                    color: Qt.rgba(1, 1, 1, 0.06)
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: "transparent"
+                                }
+
                             }
+
                         }
 
                         Text {
@@ -82,7 +120,9 @@ Flickable {
                             font.letterSpacing: 2
                             color: Components.Theme.accentCol
                         }
+
                     }
+
                 }
 
                 // name
@@ -106,6 +146,7 @@ Flickable {
 
                     Text {
                         id: versionText
+
                         anchors.centerIn: parent
                         text: "v" + page.appVersion
                         font.pixelSize: 11
@@ -113,6 +154,7 @@ Flickable {
                         font.family: "monospace"
                         color: Components.Theme.accentCol
                     }
+
                 }
 
                 // description
@@ -127,27 +169,37 @@ Flickable {
                     wrapMode: Text.WordWrap
                     Layout.maximumWidth: 300
                 }
+
             }
+
         }
 
         // ── author ──
-        Components.SectionLabel { text: "AUTHOR" }
+        Components.SectionLabel {
+            text: "AUTHOR"
+        }
 
         Components.Card {
             Layout.fillWidth: true
 
             Components.SettingRow {
                 label: "Developer"
+
                 Text {
                     text: page.authorName
                     color: Components.Theme.textPrimary
                     font.pixelSize: 13
                     font.weight: Font.Medium
                 }
+
             }
-            Components.Divider {}
+
+            Components.Divider {
+            }
+
             Components.SettingRow {
                 label: "Email"
+
                 Text {
                     text: page.authorEmail
                     color: Components.Theme.accentCol
@@ -159,12 +211,17 @@ Flickable {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: Qt.openUrlExternally("mailto:" + page.authorEmail)
                     }
+
                 }
+
             }
+
         }
 
         // ── links ──
-        Components.SectionLabel { text: "LINKS" }
+        Components.SectionLabel {
+            text: "LINKS"
+        }
 
         Components.Card {
             Layout.fillWidth: true
@@ -172,24 +229,35 @@ Flickable {
             Components.SettingRow {
                 label: "Source Code"
                 visible: page.appWebsite !== ""
+
                 LinkButton {
                     text: "GitHub"
                     url: page.appWebsite
                 }
+
             }
-            Components.Divider { visible: page.appWebsite !== "" && page.appBugReport !== "" }
+
+            Components.Divider {
+                visible: page.appWebsite !== "" && page.appBugReport !== ""
+            }
+
             Components.SettingRow {
                 label: "Report Bug"
                 visible: page.appBugReport !== ""
+
                 LinkButton {
                     text: "Issues"
                     url: page.appBugReport
                 }
+
             }
+
         }
 
         // ── license ──
-        Components.SectionLabel { text: "LICENSE" }
+        Components.SectionLabel {
+            text: "LICENSE"
+        }
 
         Components.Card {
             Layout.fillWidth: true
@@ -200,7 +268,8 @@ Flickable {
 
                 // license icon
                 Rectangle {
-                    Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
                     radius: 8
                     color: Qt.rgba(Components.Theme.successCol.r, Components.Theme.successCol.g, Components.Theme.successCol.b, 0.1)
 
@@ -209,6 +278,7 @@ Flickable {
                         text: "\u2696"
                         font.pixelSize: 16
                     }
+
                 }
 
                 ColumnLayout {
@@ -221,17 +291,24 @@ Flickable {
                         font.pixelSize: 13
                         font.weight: Font.Medium
                     }
+
                     Text {
                         text: "Open source software"
                         color: Components.Theme.textTertiary
                         font.pixelSize: 11
                     }
+
                 }
+
             }
+
         }
 
         // spacer
-        Item { Layout.preferredHeight: 12 }
+        Item {
+            Layout.preferredHeight: 12
+        }
+
     }
 
     // ── inline link button ──
@@ -242,16 +319,13 @@ Flickable {
         implicitWidth: linkRow.implicitWidth + 20
         implicitHeight: 28
         radius: 6
-        color: linkMA.pressed ? Components.Theme.activeBg
-             : linkMA.containsMouse ? Components.Theme.hoverBg : Components.Theme.controlBg
+        color: linkMA.pressed ? Components.Theme.activeBg : linkMA.containsMouse ? Components.Theme.hoverBg : Components.Theme.controlBg
         border.color: linkMA.containsMouse ? Components.Theme.accentCol : Components.Theme.controlBorder
         border.width: 1
 
-        Behavior on color { ColorAnimation { duration: 120 } }
-        Behavior on border.color { ColorAnimation { duration: 120 } }
-
         Row {
             id: linkRow
+
             anchors.centerIn: parent
             spacing: 5
 
@@ -261,7 +335,14 @@ Flickable {
                 font.pixelSize: 12
                 font.weight: Font.Medium
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 120 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+
+                }
+
             }
 
             Text {
@@ -269,16 +350,41 @@ Flickable {
                 color: linkMA.containsMouse ? Components.Theme.accentCol : Components.Theme.textTertiary
                 font.pixelSize: 10
                 anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 120 } }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+
+                }
+
             }
+
         }
 
         MouseArea {
             id: linkMA
+
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: Qt.openUrlExternally(parent.url)
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 120
+            }
+
+        }
+
     }
+
 }
