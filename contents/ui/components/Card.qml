@@ -3,6 +3,7 @@ import QtQuick.Layouts
 
 Rectangle {
     default property alias cardContent: container.data
+
     color: Theme.surfaceColor
     border.color: Theme.borderCol
     border.width: 1
@@ -14,13 +15,14 @@ Rectangle {
         anchors.fill: parent
         propagateComposedEvents: true
         onPressed: function(mouse) {
-            forceActiveFocus()
-            mouse.accepted = false
+            forceActiveFocus();
+            mouse.accepted = false;
         }
     }
 
     ColumnLayout {
         id: container
+
         anchors.fill: parent
         anchors.leftMargin: 16
         anchors.rightMargin: 16
@@ -28,4 +30,5 @@ Rectangle {
         anchors.bottomMargin: 4
         spacing: 0
     }
+
 }

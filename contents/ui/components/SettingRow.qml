@@ -17,7 +17,9 @@ RowLayout {
 
     Row {
         id: controlArea
+
         spacing: 10
         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
     }
+
 }
