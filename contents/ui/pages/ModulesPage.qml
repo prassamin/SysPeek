@@ -20,7 +20,12 @@ Flickable {
     }
 
     function refreshModules() {
-        var customMods = JSON.parse(cfg.customModules || "[]");
+        var customMods = [];
+        try {
+            customMods = JSON.parse(cfg.customModules || "[]");
+        } catch (e) {
+            customMods = [];
+        }
         var result = [];
         var builtIn = [{
             "id": "cpu",
