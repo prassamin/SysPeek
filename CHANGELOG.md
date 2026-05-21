@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [v2.0.0] - 2026-05-20
+
+### Added
+- **Unified Module Architecture**: Completely refactored the core monitoring engine to treat built-in and custom modules identically.
+- **Deep Customization for Built-in Modules**: Users can now override icons, labels, and base colors for every default system sensor (CPU, GPU, RAM, etc.).
+- **Per-Module Data Formatting**:
+  - **RAM & Swap**: Moved display mode settings from General Page to the individual module customization dialog, allowing independent selection between "Percentage" and "Value" (GB/MB) for each monitor.
+  - **Temperature**: Unit switching between Celsius (°C) and Fahrenheit (°F) per module.
+  - **Network Speed**: Per-module unit overrides for the global network speed setting.
+- **Live Preview System**: Added a real-time preview card to the module customization dialog that shows exactly how a monitor will look (including live data and dynamic conditions) before saving.
+- **Modern UI Overhaul**:
+  - Replaced legacy dropdowns with high-performance **Segmented Option Switchers** for a modern, web-like experience.
+  - Integrated professional **Interactive Color Swatches** and system-standard color picker dialogs.
+  - Replaced text/emoji-based icons with high-quality SVG icons from the KDE system theme.
+- **DnD Placement System** ([#6](https://github.com/prassamin/SysPeek/issues/6)): A highly customizable Drag-and-Drop builder to group and arrange system monitors in any grid layout, enabling space-saving vertical groupings.
+
+### Fixed
+- **Mathematical Bit-Rate Conversion** ([#9](https://github.com/prassamin/SysPeek/issues/9)): Network speed formatting now correctly multiplies byte values by 8 when bit-based units (Kbps, Mbps, etc.) are selected.
+- **QML Stability**: Fixed several "Index out of range" and "Undefined property" errors in the settings UI.
+- **Path Resolution**: Resolved issues with relative icon paths failing to load in certain UI contexts.
+
+### Removed
+- Removed legacy global threshold settings (`Usage Above`, `Speed Color`, etc.) in favor of the more powerful and flexible per-module Dynamic Conditions system.
+
 ## [v1.4.0] - 2026-05-17
 
 ### Added
