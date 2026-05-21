@@ -10,4 +10,5 @@ Text {
     HoverHandler {
         cursorShape: Qt.IBeamCursor
     }
+
 }

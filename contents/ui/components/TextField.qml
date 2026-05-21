@@ -3,6 +3,7 @@ import QtQuick.Layouts
 
 Item {
     id: tfRoot
+
     property alias text: innerField.text
     property string placeholderText: ""
 
@@ -10,7 +11,9 @@ Item {
     implicitHeight: 36
     Layout.fillWidth: true
 
-    HoverHandler { cursorShape: Qt.IBeamCursor }
+    HoverHandler {
+        cursorShape: Qt.IBeamCursor
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -18,8 +21,6 @@ Item {
         color: Theme.controlBg
         border.color: innerField.activeFocus ? Theme.accentCol : Theme.controlBorder
         border.width: 1
-
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         // focus glow
         Rectangle {
@@ -29,12 +30,28 @@ Item {
             color: "transparent"
             border.color: innerField.activeFocus ? Theme.accentDim : "transparent"
             border.width: 2
-            Behavior on border.color { ColorAnimation { duration: 250 } }
+
+            Behavior on border.color {
+                ColorAnimation {
+                    duration: 250
+                }
+
+            }
+
         }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     TextInput {
         id: innerField
+
         anchors.fill: parent
         anchors.leftMargin: 12
         anchors.rightMargin: 12
@@ -43,10 +60,13 @@ Item {
         selectionColor: Theme.accentCol
         selectedTextColor: "white"
         font.pixelSize: 13
-        HoverHandler { cursorShape: Qt.IBeamCursor }
         Keys.onReturnPressed: focus = false
         Keys.onEnterPressed: focus = false
         clip: true
+
+        HoverHandler {
+            cursorShape: Qt.IBeamCursor
+        }
 
         Text {
             anchors.fill: parent
@@ -56,5 +76,7 @@ Item {
             font.pixelSize: 13
             visible: !innerField.text && !innerField.activeFocus
         }
+
     }
+
 }

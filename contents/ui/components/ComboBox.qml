@@ -5,22 +5,23 @@ import QtQuick.Layouts
 
 Item {
     id: comboRoot
+
     property var model: []
     property int currentIndex: 0
     property string displayText: model[currentIndex] || ""
     property Item edgeSafeContainer: null
+    readonly property bool popupVisible: popupLoader.active
+
     signal activated(int index)
 
-    implicitWidth: 200
-    implicitHeight: 34
-
     function openPopup() {
-        if (!edgeSafeContainer) return;
+        if (!edgeSafeContainer)
+            return ;
+
         let pos = comboRoot.mapToItem(edgeSafeContainer, 0, 0);
         popupLoader.popupX = pos.x;
         popupLoader.popupY = pos.y + comboRoot.height + 4;
         popupLoader.popupWidth = comboRoot.width;
-
         // check if dropdown would overflow bottom
         let dropH = Math.min(comboRoot.model.length * 32 + 8, 260);
         if (popupLoader.popupY + dropH > edgeSafeContainer.height - 8)
@@ -33,7 +34,8 @@ Item {
         popupLoader.active = false;
     }
 
-    readonly property bool popupVisible: popupLoader.active
+    implicitWidth: 200
+    implicitHeight: 34
 
     Rectangle {
         anchors.fill: parent
@@ -41,9 +43,6 @@ Item {
         color: comboMA.containsMouse ? Theme.controlHover : Theme.controlBg
         border.color: comboRoot.popupVisible ? Theme.accentCol : Theme.controlBorder
         border.width: 1
-
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Behavior on border.color { ColorAnimation { duration: 200 } }
 
         RowLayout {
             anchors.fill: parent
@@ -64,11 +63,28 @@ Item {
                 color: Theme.textSecondary
                 font.pixelSize: 12
             }
+
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+
+        }
+
+        Behavior on border.color {
+            ColorAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     MouseArea {
         id: comboMA
+
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
@@ -83,15 +99,19 @@ Item {
     // popup is loaded inside edgeSafeContainer so it renders above everything
     Loader {
         id: popupLoader
-        active: false
 
         property real popupX: 0
         property real popupY: 0
         property real popupWidth: 200
 
+        active: false
         sourceComponent: popupComponent
         onLoaded: {
-            item.parent = comboRoot.edgeSafeContainer;
+            // Only re-parent to window if we are not already inside a specific container item like a Popup contentItem
+            // This prevents "stealing" the contentItem from the Popup and clearing the dialog
+            if (comboRoot.edgeSafeContainer && comboRoot.edgeSafeContainer.objectName === "bg")
+                item.parent = comboRoot.edgeSafeContainer;
+
         }
     }
 
@@ -100,7 +120,9 @@ Item {
 
         Item {
             id: popupOverlay
-            anchors.fill: parent
+
+            width: comboRoot.edgeSafeContainer ? comboRoot.edgeSafeContainer.width : 0
+            height: comboRoot.edgeSafeContainer ? comboRoot.edgeSafeContainer.height : 0
             z: 9999
 
             // click-outside-to-close
@@ -111,6 +133,9 @@ Item {
 
             Rectangle {
                 id: comboPopup
+
+                readonly property real maxHeight: 260
+
                 x: popupLoader.popupX
                 y: popupLoader.popupY
                 width: popupLoader.popupWidth
@@ -118,38 +143,28 @@ Item {
                 color: Qt.rgba(0.08, 0.08, 0.12, 1)
                 border.color: Theme.borderCol
                 border.width: 1
-
-                readonly property real maxHeight: 260
                 height: Math.min(popupCol.implicitHeight + 8, maxHeight)
                 clip: true
-
                 layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#60000000"
-                    shadowBlur: 0.6
-                    shadowVerticalOffset: 4
-                }
 
                 Flickable {
                     id: popupFlick
+
                     anchors.fill: parent
                     anchors.margins: 4
                     contentHeight: popupCol.implicitHeight
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
 
-                    QQC2.ScrollBar.vertical: QQC2.ScrollBar {
-                        policy: popupFlick.contentHeight > popupFlick.height ? QQC2.ScrollBar.AsNeeded : QQC2.ScrollBar.AlwaysOff
-                    }
-
                     Column {
                         id: popupCol
+
                         width: popupFlick.width
                         spacing: 0
 
                         Repeater {
                             model: comboRoot.model
+
                             delegate: Rectangle {
                                 width: popupCol.width
                                 height: 32
@@ -168,6 +183,7 @@ Item {
 
                                 MouseArea {
                                     id: optMA
+
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
@@ -177,11 +193,30 @@ Item {
                                         comboRoot.closePopup();
                                     }
                                 }
+
                             }
+
                         }
+
                     }
+
+                    QQC2.ScrollBar.vertical: QQC2.ScrollBar {
+                        policy: popupFlick.contentHeight > popupFlick.height ? QQC2.ScrollBar.AsNeeded : QQC2.ScrollBar.AlwaysOff
+                    }
+
                 }
+
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: "#60000000"
+                    shadowBlur: 0.6
+                    shadowVerticalOffset: 4
+                }
+
             }
+
         }
+
     }
+
 }
