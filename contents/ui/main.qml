@@ -763,8 +763,6 @@ PlasmoidItem {
                                 return compGpuTemp;
                             case "vram":
                                 return compVram;
-                            case "battery":
-                                return compBattery;
                             case "uptime":
                                 return compUptime;
                             default:
