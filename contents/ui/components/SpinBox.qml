@@ -3,10 +3,12 @@ import QtQuick.Layouts
 
 Item {
     id: spinRoot
+
     property int value: 0
     property int from: 0
     property int to: 100
     property int stepSize: 1
+
     signal valueModified()
 
     implicitWidth: 116
@@ -34,7 +36,14 @@ Item {
                     color: minusMA.containsMouse ? Theme.textPrimary : Theme.textSecondary
                     font.pixelSize: 16
                     font.weight: Font.Medium
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 Rectangle {
@@ -45,6 +54,7 @@ Item {
 
                 MouseArea {
                     id: minusMA
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -56,14 +66,36 @@ Item {
                         }
                     }
                 }
+
             }
 
             // separator
-            Rectangle { width: 1; Layout.fillHeight: true; Layout.topMargin: 6; Layout.bottomMargin: 6; color: Theme.borderCol }
+            Rectangle {
+                width: 1
+                Layout.fillHeight: true
+                Layout.topMargin: 6
+                Layout.bottomMargin: 6
+                color: Theme.borderCol
+            }
 
             // editable value
             TextInput {
                 id: spinInput
+
+                // sync display from value when not editing
+                property bool editing: activeFocus
+
+                function _commitText() {
+                    let n = parseInt(text);
+                    if (isNaN(n))
+                        n = spinRoot.from;
+
+                    n = Math.max(spinRoot.from, Math.min(spinRoot.to, n));
+                    spinRoot.value = n;
+                    spinRoot.valueModified();
+                    text = spinRoot.value;
+                }
+
                 Layout.fillWidth: true
                 color: Theme.textPrimary
                 font.pixelSize: 13
@@ -72,20 +104,15 @@ Item {
                 verticalAlignment: TextInput.AlignVCenter
                 cursorVisible: activeFocus
                 selectByMouse: true
-                HoverHandler { cursorShape: Qt.IBeamCursor }
                 selectionColor: Theme.accentCol
                 selectedTextColor: "white"
                 inputMethodHints: Qt.ImhDigitsOnly
-                validator: IntValidator { bottom: spinRoot.from; top: spinRoot.to }
-
-                // sync display from value when not editing
-                property bool editing: activeFocus
                 text: spinRoot.value
                 onEditingChanged: {
-                    if (!editing) {
+                    if (!editing)
                         // commit on focus loss
                         _commitText();
-                    }
+
                 }
                 onTextChanged: {
                     if (editing) {
@@ -97,18 +124,14 @@ Item {
                     }
                 }
                 // also commit on Enter
-                Keys.onReturnPressed: { _commitText(); focus = false; }
-                Keys.onEnterPressed: { _commitText(); focus = false; }
-
-                function _commitText() {
-                    let n = parseInt(text);
-                    if (isNaN(n)) n = spinRoot.from;
-                    n = Math.max(spinRoot.from, Math.min(spinRoot.to, n));
-                    spinRoot.value = n;
-                    spinRoot.valueModified();
-                    text = spinRoot.value;
+                Keys.onReturnPressed: {
+                    _commitText();
+                    focus = false;
                 }
-
+                Keys.onEnterPressed: {
+                    _commitText();
+                    focus = false;
+                }
                 Keys.onUpPressed: {
                     if (spinRoot.value + spinRoot.stepSize <= spinRoot.to) {
                         spinRoot.value += spinRoot.stepSize;
@@ -123,10 +146,26 @@ Item {
                         text = spinRoot.value;
                     }
                 }
+
+                HoverHandler {
+                    cursorShape: Qt.IBeamCursor
+                }
+
+                validator: IntValidator {
+                    bottom: spinRoot.from
+                    top: spinRoot.to
+                }
+
             }
 
             // separator
-            Rectangle { width: 1; Layout.fillHeight: true; Layout.topMargin: 6; Layout.bottomMargin: 6; color: Theme.borderCol }
+            Rectangle {
+                width: 1
+                Layout.fillHeight: true
+                Layout.topMargin: 6
+                Layout.bottomMargin: 6
+                color: Theme.borderCol
+            }
 
             // plus
             Item {
@@ -139,7 +178,14 @@ Item {
                     color: plusMA.containsMouse ? Theme.textPrimary : Theme.textSecondary
                     font.pixelSize: 16
                     font.weight: Font.Medium
-                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 120
+                        }
+
+                    }
+
                 }
 
                 Rectangle {
@@ -150,6 +196,7 @@ Item {
 
                 MouseArea {
                     id: plusMA
+
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -161,8 +208,11 @@ Item {
                         }
                     }
                 }
+
             }
+
         }
+
     }
 
     MouseArea {
@@ -181,4 +231,5 @@ Item {
             }
         }
     }
+
 }
