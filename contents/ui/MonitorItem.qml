@@ -1,10 +1,10 @@
 import QtQuick 6.5
+import QtQuick.Controls as QQC2
 import QtQuick.Effects
 import QtQuick.Layouts 6.5
-import org.kde.kirigami 2.20 as Kirigami
-import QtQuick.Controls as QQC2
-import org.kde.plasma.core as PlasmaCore
 import "components" as Components
+import org.kde.kirigami 2.20 as Kirigami
+import org.kde.plasma.core as PlasmaCore
 
 RowLayout {
     id: itemRoot
@@ -28,10 +28,9 @@ RowLayout {
 
     Loader {
         id: tooltipLoader
+
         active: hoverHandler.hovered && itemRoot.tooltipText !== "" && itemRoot.showTooltips
-        sourceComponent: (typeof root !== "undefined" && root.isPlanar)
-                         ? desktopTooltipComponent
-                         : panelTooltipComponent
+        sourceComponent: (typeof root !== "undefined" && root.isPlanar) ? desktopTooltipComponent : panelTooltipComponent
     }
 
     Component {
@@ -69,8 +68,11 @@ RowLayout {
                     color: Qt.rgba(1, 1, 1, 0.08)
                     radius: 8
                 }
+
             }
+
         }
+
     }
 
     Component {
@@ -89,6 +91,7 @@ RowLayout {
 
                 Rectangle {
                     id: tooltipCard
+
                     x: 0
                     y: 12
                     width: tooltipText.implicitWidth + 24
@@ -101,6 +104,7 @@ RowLayout {
 
                     Text {
                         id: tooltipText
+
                         x: 12
                         y: 12
                         text: itemRoot.tooltipText
@@ -110,9 +114,13 @@ RowLayout {
                         textFormat: Text.RichText
                         lineHeight: 1.25
                     }
+
                 }
+
             }
+
         }
+
     }
 
     Item {

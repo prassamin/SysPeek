@@ -9,24 +9,44 @@ Item {
     id: chooserRoot
 
     property Item edgeSafeContainer: null
-    signal appSelected(string command)
-
-    implicitWidth: 34
-    implicitHeight: 34
-
     property var appList: []
     property bool scanned: false
 
+    signal appSelected(string command)
+
+    function open() {
+        if (!edgeSafeContainer)
+            return ;
+
+        popupLoader.active = true;
+    }
+
+    function close() {
+        popupLoader.active = false;
+    }
+
+    implicitWidth: 34
+    implicitHeight: 34
+    Component.onCompleted: {
+        var cmd = "find /usr/share/applications $HOME/.local/share/applications /var/lib/flatpak/exports/share/applications $HOME/.local/share/flatpak/exports/share/applications /var/lib/snapd/desktop/applications -maxdepth 3 -name '*.desktop' -type f 2>/dev/null | while IFS= read -r f; do grep -q '^NoDisplay=true' \"$f\" && continue; grep -q '^Hidden=true' \"$f\" && continue; grep -q '^Type=Application' \"$f\" || continue; n=$(grep -m1 '^Name=' \"$f\" | cut -d= -f2-); e=$(grep -m1 '^Exec=' \"$f\" | cut -d= -f2- | sed 's/ %[fFuUdDnNickvm]//g; s/[[:space:]]*$//'); i=$(grep -m1 '^Icon=' \"$f\" | cut -d= -f2-); [ -n \"$n\" ] && [ -n \"$e\" ] && printf '%s|||%s|||%s\\n' \"$n\" \"$e\" \"$i\"; done | sort -f -u";
+        scanner.connectSource(cmd);
+    }
+
     Plasma5Support.DataSource {
         id: scanner
+
         engine: "executable"
         onNewData: function(source, data) {
             disconnectSource(source);
             var stdout = data["stdout"] || "";
-            if (!stdout) { chooserRoot.scanned = true; return; }
+            if (!stdout) {
+                chooserRoot.scanned = true;
+                return ;
+            }
             var lines = stdout.trim().split("\n");
             var apps = [];
-            var seen = {};
+            var seen = {
+            };
             for (var i = 0; i < lines.length; i++) {
                 var parts = lines[i].split("|||");
                 if (parts.length >= 2) {
@@ -35,27 +55,17 @@ Item {
                     var icon = parts.length >= 3 ? parts[2].trim() : "";
                     if (name && exec && !seen[exec]) {
                         seen[exec] = true;
-                        apps.push({ name: name, exec: exec, icon: icon });
+                        apps.push({
+                            "name": name,
+                            "exec": exec,
+                            "icon": icon
+                        });
                     }
                 }
             }
             chooserRoot.appList = apps;
             chooserRoot.scanned = true;
         }
-    }
-
-    Component.onCompleted: {
-        var cmd = "find /usr/share/applications $HOME/.local/share/applications /var/lib/flatpak/exports/share/applications $HOME/.local/share/flatpak/exports/share/applications /var/lib/snapd/desktop/applications -maxdepth 3 -name '*.desktop' -type f 2>/dev/null | while IFS= read -r f; do grep -q '^NoDisplay=true' \"$f\" && continue; grep -q '^Hidden=true' \"$f\" && continue; grep -q '^Type=Application' \"$f\" || continue; n=$(grep -m1 '^Name=' \"$f\" | cut -d= -f2-); e=$(grep -m1 '^Exec=' \"$f\" | cut -d= -f2- | sed 's/ %[fFuUdDnNickvm]//g; s/[[:space:]]*$//'); i=$(grep -m1 '^Icon=' \"$f\" | cut -d= -f2-); [ -n \"$n\" ] && [ -n \"$e\" ] && printf '%s|||%s|||%s\\n' \"$n\" \"$e\" \"$i\"; done | sort -f -u";
-        scanner.connectSource(cmd);
-    }
-
-    function open() {
-        if (!edgeSafeContainer) return;
-        popupLoader.active = true;
-    }
-
-    function close() {
-        popupLoader.active = false;
     }
 
     // browse button
@@ -65,19 +75,28 @@ Item {
         color: btnMA.containsMouse ? Theme.controlHover : Theme.controlBg
         border.color: Theme.controlBorder
         border.width: 1
-        Behavior on color { ColorAnimation { duration: 150 } }
 
         Kirigami.Icon {
             anchors.centerIn: parent
-            width: 16; height: 16
+            width: 16
+            height: 16
             source: "view-list-details"
             color: Theme.textSecondary
             isMask: true
         }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+
+        }
+
     }
 
     MouseArea {
         id: btnMA
+
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
@@ -87,6 +106,7 @@ Item {
     // popup loaded into edgeSafeContainer
     Loader {
         id: popupLoader
+
         active: false
         sourceComponent: popupComponent
         onLoaded: item.parent = chooserRoot.edgeSafeContainer
@@ -96,19 +116,19 @@ Item {
         id: popupComponent
 
         Item {
-            anchors.fill: parent
-            z: 99999
-
             property string searchText: searchInput.text.toLowerCase()
-
             property var filteredApps: {
                 var q = searchText;
-                if (!q) return chooserRoot.appList;
+                if (!q)
+                    return chooserRoot.appList;
+
                 return chooserRoot.appList.filter(function(app) {
-                    return app.name.toLowerCase().indexOf(q) !== -1 ||
-                           app.exec.toLowerCase().indexOf(q) !== -1;
+                    return app.name.toLowerCase().indexOf(q) !== -1 || app.exec.toLowerCase().indexOf(q) !== -1;
                 });
             }
+
+            anchors.fill: parent
+            z: 99999
 
             // backdrop
             Rectangle {
@@ -119,6 +139,7 @@ Item {
                     anchors.fill: parent
                     onClicked: chooserRoot.close()
                 }
+
             }
 
             // dialog card
@@ -130,14 +151,7 @@ Item {
                 color: Theme.bgBase
                 border.color: Theme.borderCol
                 border.width: 1
-
                 layer.enabled: true
-                layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#80000000"
-                    shadowBlur: 1.0
-                    shadowVerticalOffset: 8
-                }
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -157,24 +171,30 @@ Item {
                         }
 
                         Rectangle {
-                            width: 26; height: 26; radius: 999
+                            width: 26
+                            height: 26
+                            radius: 999
                             color: dialogCloseMA.containsMouse ? Theme.hoverBg : "transparent"
 
-                            Text {
+                            Kirigami.Icon {
                                 anchors.centerIn: parent
-                                text: "\u2715"
+                                width: 12
+                                height: 12
+                                source: "window-close-symbolic"
                                 color: Theme.textSecondary
-                                font.pixelSize: 11
                             }
 
                             MouseArea {
                                 id: dialogCloseMA
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: chooserRoot.close()
                             }
+
                         }
+
                     }
 
                     // search box
@@ -188,7 +208,14 @@ Item {
                             color: Theme.controlBg
                             border.color: searchInput.activeFocus ? Theme.accentCol : Theme.controlBorder
                             border.width: 1
-                            Behavior on border.color { ColorAnimation { duration: 200 } }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 200
+                                }
+
+                            }
+
                         }
 
                         RowLayout {
@@ -207,6 +234,7 @@ Item {
 
                             TextInput {
                                 id: searchInput
+
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 verticalAlignment: TextInput.AlignVCenter
@@ -216,7 +244,10 @@ Item {
                                 font.pixelSize: 13
                                 clip: true
                                 focus: true
-                                HoverHandler { cursorShape: Qt.IBeamCursor }
+
+                                HoverHandler {
+                                    cursorShape: Qt.IBeamCursor
+                                }
 
                                 Text {
                                     anchors.fill: parent
@@ -226,8 +257,11 @@ Item {
                                     font.pixelSize: 13
                                     visible: !searchInput.text && !searchInput.activeFocus
                                 }
+
                             }
+
                         }
+
                     }
 
                     // app list
@@ -258,6 +292,7 @@ Item {
 
                         ListView {
                             id: appListView
+
                             anchors.fill: parent
                             anchors.margins: 4
                             clip: true
@@ -306,11 +341,14 @@ Item {
                                             font.pixelSize: 10
                                             elide: Text.ElideRight
                                         }
+
                                     }
+
                                 }
 
                                 MouseArea {
                                     id: appItemMA
+
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
@@ -319,11 +357,26 @@ Item {
                                         chooserRoot.close();
                                     }
                                 }
+
                             }
+
                         }
+
                     }
+
                 }
+
+                layer.effect: MultiEffect {
+                    shadowEnabled: true
+                    shadowColor: "#80000000"
+                    shadowBlur: 1
+                    shadowVerticalOffset: 8
+                }
+
             }
+
         }
+
     }
+
 }
