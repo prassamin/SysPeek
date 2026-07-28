@@ -376,6 +376,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
+            labelWidthHint: "100%"
             color: evaluateModuleColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -406,6 +407,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: gpu.value !== undefined ? Math.round(gpu.value) + "%" : "N/A"
+            labelWidthHint: "100%"
             color: evaluateModuleColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -441,6 +443,10 @@ PlasmoidItem {
 
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
                 return mode === 0 ? percent(ramUsed.value, ramTotal.value) : formatBytes(ramUsed.value);
+            }
+            labelWidthHint: {
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                return mode === 0 ? "100%" : "99.9 GB";
             }
             color: {
                 let p = (ramUsed.value / ramTotal.value * 100);
@@ -480,6 +486,10 @@ PlasmoidItem {
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
                 return mode === 0 ? percent(swapUsed.value, swapTotal.value) : formatBytes(swapUsed.value);
             }
+            labelWidthHint: {
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                return mode === 0 ? "100%" : "99.9 GB";
+            }
             color: {
                 let p = (swapUsed.value / swapTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.swapColor;
@@ -512,6 +522,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/up.svg")
             label: netUp.value !== undefined && formatBytes(netUp.value || 0, customData ? customData.speedFormat : -1)
+            labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uploadColor;
                 return evaluateModuleColor(customData, netUp.value, baseCol);
@@ -545,6 +556,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/down.svg")
             label: netDown.value !== undefined && formatBytes(netDown.value || 0, customData ? customData.speedFormat : -1)
+            labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.downloadColor;
                 return evaluateModuleColor(customData, netDown.value, baseCol);
@@ -587,6 +599,7 @@ PlasmoidItem {
 
                 return val + "°C";
             }
+            labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
                 return evaluateModuleColor(customData, cpuTemp.value, baseCol);
@@ -622,6 +635,7 @@ PlasmoidItem {
 
                 return val + "°C";
             }
+            labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
                 return evaluateModuleColor(customData, gpuTemp.value, baseCol);
@@ -648,6 +662,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
+            labelWidthHint: "99.9 GB"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
                 return evaluateModuleColor(customData, vramUsed.value, baseCol);
@@ -674,6 +689,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/uptime.svg")
             label: uptime.value !== undefined ? formatUptime(uptime.value || 0) : "0s"
+            labelWidthHint: "99d 23h 59m"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
                 return evaluateModuleColor(customData, uptime.value, baseCol);
@@ -700,6 +716,7 @@ PlasmoidItem {
 
             icon: customData ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : ""
             label: customData ? (customData.formattedValue || (customData.value !== undefined ? (typeof customData.value === "number" ? Math.round(customData.value * 100) / 100 : customData.value) : "N/A")) : "N/A"
+            labelWidthHint: "100%"
             color: customData ? evaluateModuleColor(customData, customData.value, customData.customColor) : "#ffffff"
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
