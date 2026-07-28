@@ -383,6 +383,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (cpu.value !== undefined)
@@ -414,6 +417,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (gpu.value !== undefined)
@@ -458,6 +464,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 if (ramUsed.value === undefined || ramTotal.value === undefined)
                     return "";
@@ -500,6 +509,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 if (swapUsed.value === undefined || swapTotal.value === undefined)
                     return "";
@@ -532,6 +544,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (netUp.value !== undefined)
@@ -566,6 +581,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (netDown.value !== undefined)
@@ -609,6 +627,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
                 let c = evaluateModuleColor(customData, cpuTemp.value, baseCol);
@@ -645,6 +666,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
                 let c = evaluateModuleColor(customData, gpuTemp.value, baseCol);
@@ -672,6 +696,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
                 let c = evaluateModuleColor(customData, vramUsed.value, baseCol);
@@ -699,6 +726,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
                 let c = evaluateModuleColor(customData, uptime.value, baseCol);
@@ -723,6 +753,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: false
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: customData ? makeTooltipHtml(customData.label.toUpperCase(), evaluateModuleColor(customData, customData.value, customData.customColor), []) : ""
         }
 
