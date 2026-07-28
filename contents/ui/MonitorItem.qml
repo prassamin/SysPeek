@@ -160,9 +160,12 @@ RowLayout {
     Text {
         id: labelText
 
+        // Fixed slot from labelWidthHint; right-align so short values (2%) keep
+        // a stable trailing edge and even gaps before the next module.
         Layout.alignment: Qt.AlignVCenter
-        Layout.minimumWidth: Math.ceil(labelMetrics.advanceWidth)
-        horizontalAlignment: Text.AlignLeft
+        Layout.preferredWidth: Math.max(Math.ceil(labelMetrics.advanceWidth), Math.ceil(implicitWidth))
+        Layout.minimumWidth: Layout.preferredWidth
+        horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
         color: itemRoot.color
         font.pointSize: itemRoot.fontSize
