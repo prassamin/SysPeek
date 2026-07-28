@@ -20,6 +20,23 @@ RowLayout {
     property bool showTooltips: true
     // Reserve label slot width so digit-count changes (e.g. 2% → 80%) do not resize the panel.
     property string labelWidthHint: "100%"
+    readonly property bool fixedLabelWidthEnabled: (typeof Plasmoid !== "undefined") ? Plasmoid.configuration.fixedLabelWidth : true
+    readonly property int labelTextAlignMode: (typeof Plasmoid !== "undefined") ? Plasmoid.configuration.labelTextAlignment : 1
+    readonly property int fixedLabelExtra: (typeof Plasmoid !== "undefined") ? Plasmoid.configuration.fixedLabelWidthExtra : 0
+    readonly property int reservedLabelWidth: Math.ceil(labelMetrics.advanceWidth) + Math.max(0, fixedLabelExtra)
+    readonly property int labelHAlign: {
+        if (!fixedLabelWidthEnabled)
+            return Text.AlignLeft;
+
+        switch (labelTextAlignMode) {
+        case 0:
+            return Text.AlignLeft;
+        case 2:
+            return Text.AlignHCenter;
+        default:
+            return Text.AlignRight;
+        }
+    }
 
     spacing: showIcon ? iconTextSpacing : 0
     Layout.fillHeight: true
@@ -160,12 +177,10 @@ RowLayout {
     Text {
         id: labelText
 
-        // Fixed slot from labelWidthHint; right-align so short values (2%) keep
-        // a stable trailing edge and even gaps before the next module.
         Layout.alignment: Qt.AlignVCenter
-        Layout.preferredWidth: Math.max(Math.ceil(labelMetrics.advanceWidth), Math.ceil(implicitWidth))
-        Layout.minimumWidth: Layout.preferredWidth
-        horizontalAlignment: Text.AlignRight
+        Layout.preferredWidth: itemRoot.fixedLabelWidthEnabled ? Math.max(itemRoot.reservedLabelWidth, Math.ceil(implicitWidth)) : -1
+        Layout.minimumWidth: itemRoot.fixedLabelWidthEnabled ? Layout.preferredWidth : -1
+        horizontalAlignment: itemRoot.labelHAlign
         verticalAlignment: Text.AlignVCenter
         color: itemRoot.color
         font.pointSize: itemRoot.fontSize
