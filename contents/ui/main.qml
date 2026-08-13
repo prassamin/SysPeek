@@ -103,6 +103,14 @@ PlasmoidItem {
         }
     }
 
+    // Widest formatted byte value is the configured total (used <= total).
+    function bytesWidthHint(totalBytes) {
+        if (!(totalBytes > 0))
+            return "999.9 GB";
+
+        return formatBytes(totalBytes);
+    }
+
     function formatUptime(seconds) {
         if (!seconds)
             return "0s";
@@ -119,6 +127,13 @@ PlasmoidItem {
 
         res += m + "m";
         return res;
+    }
+
+    // Reserve at least 3 day digits so 99d → 100d does not expand the panel.
+    function uptimeWidthHint(seconds) {
+        var d = Math.floor((seconds || 0) / 86400);
+        var dayDigits = Math.max(3, String(Math.max(0, d)).length);
+        return "9".repeat(dayDigits) + "d 23h 59m";
     }
 
     function cToF(c) {
@@ -452,7 +467,7 @@ PlasmoidItem {
             }
             labelWidthHint: {
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
-                return mode === 0 ? "100%" : "99.9 GB";
+                return mode === 0 ? "100%" : bytesWidthHint(ramTotal.value);
             }
             color: {
                 let p = (ramUsed.value / ramTotal.value * 100);
@@ -497,7 +512,7 @@ PlasmoidItem {
             }
             labelWidthHint: {
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
-                return mode === 0 ? "100%" : "99.9 GB";
+                return mode === 0 ? "100%" : bytesWidthHint(swapTotal.value);
             }
             color: {
                 let p = (swapUsed.value / swapTotal.value * 100);
@@ -716,7 +731,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/uptime.svg")
             label: uptime.value !== undefined ? formatUptime(uptime.value || 0) : "0s"
-            labelWidthHint: "99d 23h 59m"
+            labelWidthHint: uptimeWidthHint(uptime.value)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
                 return evaluateModuleColor(customData, uptime.value, baseCol);
