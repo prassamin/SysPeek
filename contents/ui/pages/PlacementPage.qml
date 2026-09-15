@@ -18,7 +18,7 @@ Item {
         return (s === "" || s === "system" || s === "#ffffff" || s === "#fff") ? String(Kirigami.Theme.textColor) : c;
     }
 
-    property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "uptime"]
+    property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "vram", "uptime"]
     property var availableItems: {
         var items = baseAvailableItems.slice();
         try {
@@ -65,6 +65,10 @@ Item {
             "gpu_temp": {
                 "name": "GPU TEMP",
                 "color": cfg.gpuTempColor || "#ffffff"
+            },
+            "vram": {
+                "name": "VRAM",
+                "color": cfg.vramColor || "#ffffff"
             },
             "uptime": {
                 "name": "UPTIME",
@@ -215,28 +219,59 @@ Item {
         return "";
     }
 
-    property var gpuTempCandidates: [
-        "gpu/gpu0/temperature",
-        "gpu/gpu1/temperature",
-        "gpu/gpu2/temperature"
+    property var gpuCandidatePrefixes: [
+        "gpu/gpu0",
+        "gpu/gpu1",
+        "gpu/gpu2",
+        "gpu/gpu3",
+        "gpu/gpu4",
+        "gpu/gpu5",
+        "gpu/gpu6",
+        "gpu/gpu7",
+        "gpu/gpu8"
     ]
+    property string autoDetectedGpuPrefix: ""
+    property string autoResolvedGpuUsageSensorId: ""
     property string autoResolvedGpuTempSensorId: ""
-    property bool gpuTempProbeResolved: false
+    property bool gpuScanResolved: false
 
     Item {
-        id: gpuTempProbeResolver
+        id: gpuDeviceScanner
         visible: false
 
         Repeater {
-            model: page.gpuTempCandidates
+            model: page.gpuCandidatePrefixes
             delegate: Item {
-                property string candId: modelData
+                property string prefix: modelData
+
                 Sensors.Sensor {
-                    sensorId: !page.autoResolvedGpuTempSensorId ? candId : ""
+                    id: candTempProbe
+                    sensorId: !page.autoResolvedGpuTempSensorId ? (prefix + "/temperature") : ""
+                    updateRateLimit: 1000
                     onStatusChanged: {
-                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuTempSensorId) {
-                            page.autoResolvedGpuTempSensorId = candId;
-                            page.gpuTempProbeResolved = true;
+                        if (status === Sensors.Sensor.Ready) {
+                            if (!page.autoResolvedGpuTempSensorId || prefix !== "gpu/gpu0") {
+                                page.autoDetectedGpuPrefix = prefix;
+                                page.autoResolvedGpuTempSensorId = prefix + "/temperature";
+                                if (!page.autoResolvedGpuUsageSensorId) {
+                                    page.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                                }
+                                page.gpuScanResolved = true;
+                            }
+                        }
+                    }
+                }
+
+                Sensors.Sensor {
+                    id: candUsageProbe
+                    sensorId: !page.autoResolvedGpuUsageSensorId ? (prefix + "/usage") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuUsageSensorId) {
+                            if (!page.autoDetectedGpuPrefix) {
+                                page.autoDetectedGpuPrefix = prefix;
+                            }
+                            page.autoResolvedGpuUsageSensorId = prefix + "/usage";
                         }
                     }
                 }
@@ -245,27 +280,14 @@ Item {
 
         Timer {
             interval: 1500
-            running: !page.gpuTempProbeResolved
+            running: !page.gpuScanResolved
             onTriggered: {
-                page.gpuTempProbeResolved = true;
+                if (!page.autoResolvedGpuUsageSensorId) {
+                    page.autoResolvedGpuUsageSensorId = page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage";
+                }
+                page.gpuScanResolved = true;
             }
         }
-    }
-
-    Sensors.Sensor {
-        id: customGpuTempProbe
-        sensorId: page.getModuleSensorId("gpu_temp")
-    }
-
-    function isModuleInvalid(itemId) {
-        if (itemId === "gpu_temp") {
-            let customId = page.getModuleSensorId("gpu_temp");
-            if (customId) {
-                return customGpuTempProbe.status === Sensors.Sensor.Error;
-            }
-            return page.gpuTempProbeResolved && page.autoResolvedGpuTempSensorId === "";
-        }
-        return false;
     }
 
     Connections {
@@ -287,13 +309,12 @@ Item {
             id: ghostItem
 
             property string itemId
-            readonly property bool isInvalid: page.isModuleInvalid(itemId)
 
             width: 116
             height: 36
             radius: 6
-            color: isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.25) : Components.Theme.controlBg
-            border.color: isInvalid ? Components.Theme.dangerCol : Components.Theme.accentCol
+            color: Components.Theme.controlBg
+            border.color: Components.Theme.accentCol
             border.width: 2
             z: 99999
             Drag.active: true
@@ -308,7 +329,7 @@ Item {
                 width: parent.width + 16
                 height: parent.height + 16
                 radius: 14
-                color: ghostItem.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.15) : Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.15)
+                color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.15)
                 z: -1
 
                 Rectangle {
@@ -316,7 +337,7 @@ Item {
                     width: parent.width - 8
                     height: parent.height - 8
                     radius: 10
-                    color: ghostItem.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.3) : Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.3)
+                    color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.3)
                 }
 
             }
@@ -330,25 +351,17 @@ Item {
                     width: 4
                     height: 16
                     radius: 2
-                    color: ghostItem.isInvalid ? Components.Theme.dangerCol : (page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary)
+                    color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
                 }
 
                 Text {
                     text: page.itemMetadata[itemId] ? page.itemMetadata[itemId].name : itemId
-                    color: ghostItem.isInvalid ? Components.Theme.dangerCol : Components.Theme.textPrimary
+                    color: Components.Theme.textPrimary
                     font.pixelSize: 11
                     font.bold: true
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     maximumLineCount: 1
-                }
-
-                Kirigami.Icon {
-                    visible: ghostItem.isInvalid
-                    Layout.preferredWidth: 14
-                    Layout.preferredHeight: 14
-                    source: "dialog-warning-symbolic"
-                    color: Components.Theme.dangerCol
                 }
 
             }
@@ -969,15 +982,12 @@ Item {
     }
 
     component ChipVisuals: Rectangle {
-        id: chipRoot
-
         property string itemId
-        readonly property bool isInvalid: page.isModuleInvalid(itemId)
 
         radius: 6
-        color: chipRoot.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.2) : Components.Theme.controlBg
-        border.color: chipRoot.isInvalid ? Components.Theme.dangerCol : Components.Theme.controlBorder
-        border.width: chipRoot.isInvalid ? 1.5 : 1
+        color: Components.Theme.controlBg
+        border.color: Components.Theme.controlBorder
+        border.width: 1
 
         RowLayout {
             anchors.fill: parent
@@ -988,12 +998,12 @@ Item {
                 width: 4
                 height: 16
                 radius: 2
-                color: chipRoot.isInvalid ? Components.Theme.dangerCol : (page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary)
+                color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
             }
 
             Text {
                 text: page.itemMetadata[itemId] ? page.itemMetadata[itemId].name : itemId
-                color: chipRoot.isInvalid ? Components.Theme.dangerCol : Components.Theme.textPrimary
+                color: Components.Theme.textPrimary
                 font.pixelSize: 11
                 font.bold: true
                 Layout.fillWidth: true
@@ -1001,25 +1011,6 @@ Item {
                 maximumLineCount: 1
             }
 
-            Kirigami.Icon {
-                visible: chipRoot.isInvalid
-                Layout.preferredWidth: 14
-                Layout.preferredHeight: 14
-                source: "dialog-warning-symbolic"
-                color: Components.Theme.dangerCol
-            }
-
-        }
-
-        HoverHandler {
-            id: chipHover
-        }
-
-        QQC2.ToolTip {
-            visible: chipHover.hovered && chipRoot.isInvalid
-            delay: 300
-            timeout: -1
-            text: i18n("Sensor not found.\nPlease select a valid sensor in the Modules section.")
         }
 
     }

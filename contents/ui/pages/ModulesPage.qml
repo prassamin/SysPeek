@@ -31,6 +31,70 @@ Flickable {
         return (s === "" || s === "#ffffff" || s === "#fff") ? "system" : String(c).trim();
     }
 
+    function getAvailableUnits(moduleId) {
+        var id = String(moduleId || "").toLowerCase();
+        if (id === "cpu" || id === "gpu") {
+            return ["%"];
+        } else if (id === "ram" || id === "swap" || id === "vram") {
+            return ["%", "GB", "MB", "Bytes"];
+        } else if (id === "upload" || id === "download") {
+            return ["MB/s", "KB/s", "GB/s", "Mbps", "Bytes/s"];
+        } else if (id === "cpu_temp" || id === "gpu_temp") {
+            return ["°C", "°F"];
+        } else if (id === "uptime") {
+            return ["s", "m", "h", "d"];
+        } else {
+            return ["%", "MB", "GB", "MB/s", "KB/s", "°C", "°F", "Raw"];
+        }
+    }
+
+    function getDefaultUnit(moduleId) {
+        var id = String(moduleId || "").toLowerCase();
+        if (id === "upload" || id === "download")
+            return "MB/s";
+        if (id === "cpu_temp" || id === "gpu_temp")
+            return "°C";
+        if (id === "uptime")
+            return "h";
+        return "%";
+    }
+
+    function isByteUnit(unit) {
+        return unit === "Bytes" || unit === "KB" || unit === "MB" || unit === "GB" || unit === "TB";
+    }
+
+    function resolveThresholdValue(c) {
+        if (!c || c.threshold === undefined || c.threshold === null)
+            return NaN;
+        var val = parseFloat(c.threshold);
+        if (isNaN(val))
+            return NaN;
+        var unit = c.unit ? String(c.unit).trim() : "";
+        if (unit === "KB" || unit === "KB/s")
+            return val * 1024;
+        if (unit === "MB" || unit === "MB/s")
+            return val * 1048576;
+        if (unit === "GB" || unit === "GB/s")
+            return val * 1073741824;
+        if (unit === "TB" || unit === "TB/s")
+            return val * 1099511627776;
+        if (unit === "Kbps")
+            return (val * 1000) / 8;
+        if (unit === "Mbps")
+            return (val * 1000000) / 8;
+        if (unit === "Gbps")
+            return (val * 1000000000) / 8;
+        if (unit === "°F")
+            return (val - 32) * 5 / 9;
+        if (unit === "m")
+            return val * 60;
+        if (unit === "h")
+            return val * 3600;
+        if (unit === "d")
+            return val * 86400;
+        return val;
+    }
+
     function refreshModules() {
         var customMods = [];
         try {
@@ -50,7 +114,7 @@ Flickable {
             "id": "gpu",
             "label": "GPU",
             "icon": "gpu.svg",
-            "sensorId": "gpu/all/usage",
+            "sensorId": page.autoResolvedGpuUsageSensorId || (page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage"),
             "color": String(cfg.gpuColor),
             "isBuiltIn": true
         }, {
@@ -92,8 +156,15 @@ Flickable {
             "id": "gpu_temp",
             "label": "GPU TEMP",
             "icon": "temp.svg",
-            "sensorId": page.autoResolvedGpuTempSensorId || (page.gpuTempResolved ? "" : "gpu/gpu0/temperature"),
+            "sensorId": page.autoResolvedGpuTempSensorId || (page.gpuScanResolved ? "" : (page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/temperature") : "gpu/gpu0/temperature")),
             "color": String(cfg.gpuTempColor),
+            "isBuiltIn": true
+        }, {
+            "id": "vram",
+            "label": "VRAM",
+            "icon": "gpu.svg",
+            "sensorId": page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/usedVram") : "gpu/all/usedVram",
+            "color": String(cfg.vramColor),
             "isBuiltIn": true
         }, {
             "id": "uptime",
@@ -189,28 +260,60 @@ Flickable {
         id: sensorTree
     }
 
-    property var gpuTempCandidates: [
-        "gpu/gpu0/temperature",
-        "gpu/gpu1/temperature",
-        "gpu/gpu2/temperature"
+    property var gpuCandidatePrefixes: [
+        "gpu/gpu0",
+        "gpu/gpu1",
+        "gpu/gpu2",
+        "gpu/gpu3",
+        "gpu/gpu4",
+        "gpu/gpu5",
+        "gpu/gpu6",
+        "gpu/gpu7",
+        "gpu/gpu8"
     ]
+    property string autoDetectedGpuPrefix: ""
+    property string autoResolvedGpuUsageSensorId: ""
     property string autoResolvedGpuTempSensorId: ""
-    property bool gpuTempResolved: false
+    property bool gpuScanResolved: false
 
     Item {
-        id: gpuTempResolver
+        id: gpuDeviceScanner
         visible: false
 
         Repeater {
-            model: page.gpuTempCandidates
+            model: page.gpuCandidatePrefixes
             delegate: Item {
-                property string candId: modelData
+                property string prefix: modelData
+
                 Sensors.Sensor {
-                    sensorId: !page.autoResolvedGpuTempSensorId ? candId : ""
+                    id: candTempProbe
+                    sensorId: !page.autoResolvedGpuTempSensorId ? (prefix + "/temperature") : ""
+                    updateRateLimit: 1000
                     onStatusChanged: {
-                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuTempSensorId) {
-                            page.autoResolvedGpuTempSensorId = candId;
-                            page.gpuTempResolved = true;
+                        if (status === Sensors.Sensor.Ready) {
+                            if (!page.autoResolvedGpuTempSensorId || prefix !== "gpu/gpu0") {
+                                page.autoDetectedGpuPrefix = prefix;
+                                page.autoResolvedGpuTempSensorId = prefix + "/temperature";
+                                if (!page.autoResolvedGpuUsageSensorId) {
+                                    page.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                                }
+                                page.gpuScanResolved = true;
+                                page.refreshModules();
+                            }
+                        }
+                    }
+                }
+
+                Sensors.Sensor {
+                    id: candUsageProbe
+                    sensorId: !page.autoResolvedGpuUsageSensorId ? (prefix + "/usage") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuUsageSensorId) {
+                            if (!page.autoDetectedGpuPrefix) {
+                                page.autoDetectedGpuPrefix = prefix;
+                            }
+                            page.autoResolvedGpuUsageSensorId = prefix + "/usage";
                             page.refreshModules();
                         }
                     }
@@ -220,9 +323,13 @@ Flickable {
 
         Timer {
             interval: 1500
-            running: !page.gpuTempResolved
+            running: !page.gpuScanResolved
             onTriggered: {
-                page.gpuTempResolved = true;
+                if (!page.autoResolvedGpuUsageSensorId) {
+                    page.autoResolvedGpuUsageSensorId = page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage";
+                }
+                page.gpuScanResolved = true;
+                page.refreshModules();
             }
         }
     }
@@ -237,6 +344,12 @@ Flickable {
         id: swapTotal
 
         sensorId: "memory/swap/total"
+    }
+
+    Sensors.Sensor {
+        id: vramTotal
+
+        sensorId: page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/totalVram") : "gpu/all/totalVram"
     }
 
     Connections {
@@ -273,6 +386,10 @@ Flickable {
         }
 
         function onGpuTempColorChanged() {
+            page.refreshModules();
+        }
+
+        function onVramColorChanged() {
             page.refreshModules();
         }
 
@@ -601,8 +718,12 @@ Flickable {
             addDialog.selectedIcon = String(moduleData.icon || "");
             addDialog.userEditedLabel = true;
             var initialSensorId = String(moduleData.sensorId || "");
-            if (moduleData.id === "gpu_temp" && (!initialSensorId || initialSensorId === "gpu/gpu0/temperature") && page.autoResolvedGpuTempSensorId) {
+            if (moduleData.id === "gpu" && (!initialSensorId || initialSensorId === "gpu/all/usage" || initialSensorId === "gpu/gpu0/usage") && page.autoResolvedGpuUsageSensorId) {
+                initialSensorId = page.autoResolvedGpuUsageSensorId;
+            } else if (moduleData.id === "gpu_temp" && (!initialSensorId || initialSensorId === "gpu/gpu0/temperature") && page.autoResolvedGpuTempSensorId) {
                 initialSensorId = page.autoResolvedGpuTempSensorId;
+            } else if (moduleData.id === "vram" && (!initialSensorId || initialSensorId === "gpu/all/usedVram" || initialSensorId === "gpu/gpu0/usedVram") && page.autoDetectedGpuPrefix) {
+                initialSensorId = page.autoDetectedGpuPrefix + "/usedVram";
             }
             idField.text = initialSensorId;
             labelField.text = String(moduleData.label || "");
@@ -613,7 +734,30 @@ Flickable {
             tempConditionsModel.clear();
             if (moduleData.conditions) {
                 for (var i = 0; i < moduleData.conditions.length; i++) {
-                    tempConditionsModel.append(moduleData.conditions[i]);
+                    var c = moduleData.conditions[i];
+                    var defUnit = page.getDefaultUnit(moduleData.id);
+                    var condUnit = c.unit !== undefined ? c.unit : defUnit;
+                    var condThresh = c.threshold;
+
+                    if (c.unit === undefined && (moduleData.id === "upload" || moduleData.id === "download")) {
+                        var rawNum = parseFloat(c.threshold);
+                        if (!isNaN(rawNum)) {
+                            if (rawNum >= 1048576 && rawNum % 1048576 === 0) {
+                                condThresh = String(rawNum / 1048576);
+                                condUnit = "MB/s";
+                            } else if (rawNum >= 1024 && rawNum % 1024 === 0) {
+                                condThresh = String(rawNum / 1024);
+                                condUnit = "KB/s";
+                            }
+                        }
+                    }
+
+                    tempConditionsModel.append({
+                        "operator": c.operator || ">",
+                        "threshold": String(condThresh !== undefined ? condThresh : ""),
+                        "color": c.color || "#ff0000",
+                        "unit": String(condUnit)
+                    });
                 }
             }
             addDialog.open();
@@ -638,7 +782,8 @@ Flickable {
                 conds.push({
                     "operator": c.operator,
                     "threshold": c.threshold,
-                    "color": c.color
+                    "color": c.color,
+                    "unit": c.unit || page.getDefaultUnit(addDialog.editingModuleId)
                 });
             }
             var modData = {
@@ -1223,7 +1368,7 @@ Flickable {
 
                     // 3. DATA FORMAT CARD
                     Rectangle {
-                        visible: ["ram", "swap", "upload", "download", "cpu_temp", "gpu_temp"].indexOf(addDialog.editingModuleId) !== -1
+                        visible: ["ram", "swap", "vram", "upload", "download", "cpu_temp", "gpu_temp"].indexOf(addDialog.editingModuleId) !== -1
                         Layout.fillWidth: true
                         Layout.preferredHeight: formatCol.implicitHeight + 24
                         color: Components.Theme.controlBg
@@ -1247,7 +1392,7 @@ Flickable {
                             }
 
                             ColumnLayout {
-                                visible: ["ram", "swap"].indexOf(addDialog.editingModuleId) !== -1
+                                visible: ["ram", "swap", "vram"].indexOf(addDialog.editingModuleId) !== -1
                                 spacing: 8
 
                                 Text {
@@ -1476,7 +1621,7 @@ Flickable {
                                                 property var ops: ["==", ">", "<", ">=", "<="]
 
                                                 model: ops
-                                                Layout.preferredWidth: 60
+                                                Layout.preferredWidth: 70
                                                 Layout.preferredHeight: 28
                                                 font.pixelSize: 12
                                                 currentIndex: {
@@ -1504,24 +1649,32 @@ Flickable {
                                                 }
                                             }
 
+                                            QQC2.ComboBox {
+                                                id: editUnitCombo
+
+                                                property var availableUnits: page.getAvailableUnits(addDialog.editingModuleId)
+
+                                                model: availableUnits
+                                                Layout.preferredWidth: 70
+                                                Layout.preferredHeight: 28
+                                                font.pixelSize: 12
+                                                currentIndex: {
+                                                    var data = tempConditionsModel.get(index);
+                                                    var u = data ? data.unit : "";
+                                                    var idx = availableUnits.indexOf(u);
+                                                    return idx !== -1 ? idx : 0;
+                                                }
+                                                onActivated: (idx) => {
+                                                    if (index >= 0 && index < tempConditionsModel.count)
+                                                        tempConditionsModel.setProperty(index, "unit", availableUnits[idx]);
+
+                                                }
+                                            }
+
                                             Text {
                                                 text: "then"
                                                 color: Components.Theme.textSecondary
                                                 font.pixelSize: 11
-                                            }
-
-                                            TextInput {
-                                                Layout.preferredWidth: 60
-                                                Layout.fillHeight: true
-                                                color: Components.Theme.textPrimary
-                                                font.pixelSize: 12
-                                                verticalAlignment: TextInput.AlignVCenter
-                                                text: model.color
-                                                onTextEdited: {
-                                                    if (index >= 0 && index < tempConditionsModel.count)
-                                                        tempConditionsModel.setProperty(index, "color", text.trim());
-
-                                                }
                                             }
 
                                             Components.ColorSwatch {
@@ -1594,7 +1747,7 @@ Flickable {
                                         id: condOp
 
                                         model: ["==", ">", "<", ">=", "<="]
-                                        Layout.preferredWidth: 60
+                                        Layout.preferredWidth: 70
                                         Layout.preferredHeight: 28
                                         font.pixelSize: 12
                                     }
@@ -1609,36 +1762,34 @@ Flickable {
                                         verticalAlignment: TextInput.AlignVCenter
 
                                         Text {
-                                            text: "80"
+                                            text: (addDialog.editingModuleId === "upload" || addDialog.editingModuleId === "download") ? "5" : "80"
                                             color: Components.Theme.textTertiary
                                             anchors.verticalCenter: parent.verticalCenter
                                             visible: !parent.text
                                         }
 
+                                    }
+
+                                    QQC2.ComboBox {
+                                        id: condUnit
+
+                                        property var availableUnits: page.getAvailableUnits(addDialog.editingModuleId)
+
+                                        model: availableUnits
+                                        Layout.preferredWidth: 70
+                                        Layout.preferredHeight: 28
+                                        font.pixelSize: 12
+                                        currentIndex: {
+                                            var def = page.getDefaultUnit(addDialog.editingModuleId);
+                                            var idx = availableUnits.indexOf(def);
+                                            return idx !== -1 ? idx : 0;
+                                        }
                                     }
 
                                     Text {
                                         text: "then"
                                         color: Components.Theme.textSecondary
                                         font.pixelSize: 11
-                                    }
-
-                                    TextInput {
-                                        id: condColor
-
-                                        Layout.preferredWidth: 60
-                                        Layout.fillHeight: true
-                                        color: Components.Theme.textPrimary
-                                        font.pixelSize: 12
-                                        verticalAlignment: TextInput.AlignVCenter
-
-                                        Text {
-                                            text: "#ff0000"
-                                            color: Components.Theme.textTertiary
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            visible: !parent.text
-                                        }
-
                                     }
 
                                     Components.ColorSwatch {
@@ -1682,7 +1833,8 @@ Flickable {
                                                 tempConditionsModel.append({
                                                     "operator": condOp.currentText,
                                                     "threshold": condThresh.text.trim(),
-                                                    "color": condColor.text.trim()
+                                                    "color": condColor.text.trim(),
+                                                    "unit": condUnit.currentText || page.getDefaultUnit(addDialog.editingModuleId)
                                                 });
                                                 condThresh.text = "";
                                                 condColor.text = "";
@@ -1743,30 +1895,34 @@ Flickable {
                             }
                         }
 
-                        function evaluatePreviewColor(val, baseCol, condCount) {
-                            var v = parseFloat(val);
-                            if (isNaN(v))
-                                return baseCol;
+                        function evaluatePreviewColor(val, baseCol, condCount, rawByteVal) {
+                            var numVal = parseFloat(val);
+                            var byteVal = (rawByteVal !== undefined && rawByteVal !== null) ? parseFloat(rawByteVal) : NaN;
 
                             for (var i = 0; i < condCount; i++) {
                                 var c = tempConditionsModel.get(i);
                                 if (!c)
                                     continue;
 
-                                var thresh = parseFloat(c.threshold);
+                                var thresh = page.resolveThresholdValue(c);
                                 if (isNaN(thresh))
                                     continue;
 
+                                var unit = c.unit ? String(c.unit).trim() : "";
+                                var compareVal = (page.isByteUnit(unit) && !isNaN(byteVal)) ? byteVal : numVal;
+                                if (isNaN(compareVal))
+                                    continue;
+
                                 var matched = false;
-                                if (c.operator === "==" && v === thresh)
+                                if (c.operator === "==" && compareVal === thresh)
                                     matched = true;
-                                else if (c.operator === ">" && v > thresh)
+                                else if (c.operator === ">" && compareVal > thresh)
                                     matched = true;
-                                else if (c.operator === "<" && v < thresh)
+                                else if (c.operator === "<" && compareVal < thresh)
                                     matched = true;
-                                else if (c.operator === ">=" && v >= thresh)
+                                else if (c.operator === ">=" && compareVal >= thresh)
                                     matched = true;
-                                else if (c.operator === "<=" && v <= thresh)
+                                else if (c.operator === "<=" && compareVal <= thresh)
                                     matched = true;
                                 if (matched)
                                     return c.color;
@@ -1828,6 +1984,14 @@ Flickable {
                                         else
                                             return parent.parent.formatBytes(previewSensor.value || 0, -1);
                                     }
+                                    // VRAM Display Mode
+                                    if (addDialog.editingModuleId === "vram") {
+                                        if (addDialog.currentDisplayMode === 0 && vramTotal.value)
+                                            // Percentage
+                                            return page.percent(previewSensor.value || 0, vramTotal.value || 1);
+                                        else
+                                            return parent.parent.formatBytes(previewSensor.value || 0, -1);
+                                    }
                                     // Temperature Unit
                                     if (["cpu_temp", "gpu_temp"].indexOf(addDialog.editingModuleId) !== -1) {
                                         var val = previewSensor.value !== undefined ? Math.round(previewSensor.value) : 0;
@@ -1843,7 +2007,21 @@ Flickable {
 
                                     return previewSensor.formattedValue || (previewSensor.value !== undefined ? Math.round(previewSensor.value) : "N/A");
                                 }
-                                color: parent.parent.evaluatePreviewColor((previewSensor.value !== undefined ? previewSensor.value : 75), page.resolveColor(colorField.text), tempConditionsModel.count)
+                                color: {
+                                    var rawVal = previewSensor.value !== undefined ? previewSensor.value : 75;
+                                    var byteVal = undefined;
+                                    if (addDialog.editingModuleId === "ram") {
+                                        byteVal = previewSensor.value !== undefined ? previewSensor.value : (75 * (ramTotal.value || 16000000000) / 100);
+                                        rawVal = ramTotal.value ? (byteVal / ramTotal.value * 100) : 75;
+                                    } else if (addDialog.editingModuleId === "swap") {
+                                        byteVal = previewSensor.value !== undefined ? previewSensor.value : (75 * (swapTotal.value || 8000000000) / 100);
+                                        rawVal = swapTotal.value ? (byteVal / swapTotal.value * 100) : 75;
+                                    } else if (addDialog.editingModuleId === "vram") {
+                                        byteVal = previewSensor.value !== undefined ? previewSensor.value : (75 * (vramTotal.value || 8000000000) / 100);
+                                        rawVal = (vramTotal.value && vramTotal.value > 0) ? (byteVal / vramTotal.value * 100) : 75;
+                                    }
+                                    return parent.parent.evaluatePreviewColor(rawVal, page.resolveColor(colorField.text), tempConditionsModel.count, byteVal);
+                                }
                                 fontSize: cfg.fontSize || 10
                                 fontFamily: cfg.fontFamily || ""
                                 showIcon: true

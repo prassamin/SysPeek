@@ -111,6 +111,10 @@
             <label>GPU Temp Color</label>
             <default>#ffffff</default>
         </entry>
+        <entry name="vramColor" type="Color">
+            <label>VRAM Color</label>
+            <default>#ffffff</default>
+        </entry>
         <entry name="batteryColor" type="Color">
             <label>Battery Color</label>
             <default>#ffffff</default>
@@ -129,7 +133,7 @@
         </entry>
         <entry name="customModules" type="String">
             <label>Custom Modules JSON</label>
-            <default>[{"id":"cpu","conditions":[{"operator":">=","threshold":"80","color":"#ffa500"},{"operator":">=","threshold":"95","color":"#ff0000"}]},{"id":"gpu","conditions":[{"operator":">=","threshold":"80","color":"#ffa500"},{"operator":">=","threshold":"95","color":"#ff0000"}]},{"id":"ram","conditions":[{"operator":">=","threshold":"80","color":"#ffa500"},{"operator":">=","threshold":"95","color":"#ff0000"}]},{"id":"swap","conditions":[{"operator":">=","threshold":"80","color":"#ffa500"},{"operator":">=","threshold":"95","color":"#ff0000"}]},{"id":"upload","conditions":[{"operator":">=","threshold":"1048576","color":"#00ffff"},{"operator":">=","threshold":"5242880","color":"#00ff00"}]},{"id":"download","conditions":[{"operator":">=","threshold":"1048576","color":"#00ffff"},{"operator":">=","threshold":"5242880","color":"#00ff00"}]}]</default>
+            <default>[{"id":"cpu","conditions":[{"operator":">=","threshold":"80","unit":"%","color":"#ffa500"},{"operator":">=","threshold":"95","unit":"%","color":"#ff0000"}]},{"id":"gpu","conditions":[{"operator":">=","threshold":"80","unit":"%","color":"#ffa500"},{"operator":">=","threshold":"95","unit":"%","color":"#ff0000"}]},{"id":"ram","conditions":[{"operator":">=","threshold":"80","unit":"%","color":"#ffa500"},{"operator":">=","threshold":"95","unit":"%","color":"#ff0000"}]},{"id":"swap","conditions":[{"operator":">=","threshold":"80","unit":"%","color":"#ffa500"},{"operator":">=","threshold":"95","unit":"%","color":"#ff0000"}]},{"id":"upload","conditions":[{"operator":">=","threshold":"1","unit":"MB/s","color":"#00ffff"},{"operator":">=","threshold":"5","unit":"MB/s","color":"#00ff00"}]},{"id":"download","conditions":[{"operator":">=","threshold":"1","unit":"MB/s","color":"#00ffff"},{"operator":">=","threshold":"5","unit":"MB/s","color":"#00ff00"}]}]</default>
         </entry>
     </group>
 </kcfg>
