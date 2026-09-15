@@ -72,6 +72,78 @@ Flickable {
         }
 
         Components.SectionLabel {
+            text: "VALUE WIDTH"
+        }
+
+        Components.Card {
+            Layout.fillWidth: true
+
+            Components.SettingRow {
+                label: "Fixed Value Width"
+
+                Components.Toggle {
+                    id: flwToggle
+
+                    checked: cfg.fixedLabelWidth
+                    onToggled: cfg.fixedLabelWidth = checked
+                }
+
+            }
+
+            Components.Divider {
+            }
+
+            Components.SettingRow {
+                label: "Text Alignment"
+                opacity: flwToggle.checked ? 1 : 0.3
+
+                Components.ComboBox {
+                    edgeSafeContainer: page.edgeSafeContainer
+                    implicitWidth: 140
+                    enabled: flwToggle.checked
+                    model: ["Left", "Right", "Center"]
+                    currentIndex: Math.max(0, Math.min(2, cfg.labelTextAlignment))
+                    onActivated: function(i) {
+                        cfg.labelTextAlignment = i;
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 200
+                    }
+
+                }
+
+            }
+
+            Components.Divider {
+            }
+
+            Components.SettingRow {
+                label: "Extra Width"
+                opacity: flwToggle.checked ? 1 : 0.3
+
+                Components.SpinBox {
+                    from: 0
+                    to: 40
+                    value: cfg.fixedLabelWidthExtra
+                    enabled: flwToggle.checked
+                    onValueModified: cfg.fixedLabelWidthExtra = value
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 200
+                    }
+
+                }
+
+            }
+
+        }
+
+        Components.SectionLabel {
             text: "SPACING"
         }
 

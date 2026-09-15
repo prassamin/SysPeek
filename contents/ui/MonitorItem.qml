@@ -18,9 +18,35 @@ RowLayout {
     property bool showIcon: true
     property string tooltipText: ""
     property bool showTooltips: true
+    // Reserve label slot width so digit-count changes (e.g. 2% → 80%) do not resize the panel.
+    property string labelWidthHint: "100%"
+    property bool fixedLabelWidth: true
+    property int labelTextAlignment: 1 // 0=Left, 1=Right, 2=Center
+    property int fixedLabelWidthExtra: 0
+    readonly property int reservedLabelWidth: Math.ceil(labelMetrics.advanceWidth) + Math.max(0, fixedLabelWidthExtra)
+    readonly property int labelHAlign: {
+        if (!fixedLabelWidth)
+            return Text.AlignLeft;
+
+        switch (Number(labelTextAlignment)) {
+        case 0:
+            return Text.AlignLeft;
+        case 2:
+            return Text.AlignHCenter;
+        default:
+            return Text.AlignRight;
+        }
+    }
 
     spacing: showIcon ? iconTextSpacing : 0
     Layout.fillHeight: true
+
+    TextMetrics {
+        id: labelMetrics
+
+        font: labelText.font
+        text: itemRoot.labelWidthHint
+    }
 
     HoverHandler {
         id: hoverHandler
@@ -152,6 +178,9 @@ RowLayout {
         id: labelText
 
         Layout.alignment: Qt.AlignVCenter
+        Layout.preferredWidth: itemRoot.fixedLabelWidth ? Math.max(itemRoot.reservedLabelWidth, Math.ceil(implicitWidth)) : Math.ceil(implicitWidth)
+        Layout.minimumWidth: Layout.preferredWidth
+        horizontalAlignment: itemRoot.labelHAlign
         verticalAlignment: Text.AlignVCenter
         color: itemRoot.color
         font.pointSize: itemRoot.fontSize

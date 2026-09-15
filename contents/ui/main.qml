@@ -103,6 +103,14 @@ PlasmoidItem {
         }
     }
 
+    // Widest formatted byte value is the configured total (used <= total).
+    function bytesWidthHint(totalBytes) {
+        if (!(totalBytes > 0))
+            return "999.9 GB";
+
+        return formatBytes(totalBytes);
+    }
+
     function formatUptime(seconds) {
         if (!seconds)
             return "0s";
@@ -119,6 +127,13 @@ PlasmoidItem {
 
         res += m + "m";
         return res;
+    }
+
+    // Reserve at least 3 day digits so 99d → 100d does not expand the panel.
+    function uptimeWidthHint(seconds) {
+        var d = Math.floor((seconds || 0) / 86400);
+        var dayDigits = Math.max(3, String(Math.max(0, d)).length);
+        return "9".repeat(dayDigits) + "d 23h 59m";
     }
 
     function cToF(c) {
@@ -376,12 +391,16 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
+            labelWidthHint: "100%"
             color: evaluateModuleColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (cpu.value !== undefined)
@@ -406,12 +425,16 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: gpu.value !== undefined ? Math.round(gpu.value) + "%" : "N/A"
+            labelWidthHint: "100%"
             color: evaluateModuleColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (gpu.value !== undefined)
@@ -442,6 +465,10 @@ PlasmoidItem {
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
                 return mode === 0 ? percent(ramUsed.value, ramTotal.value) : formatBytes(ramUsed.value);
             }
+            labelWidthHint: {
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                return mode === 0 ? "100%" : bytesWidthHint(ramTotal.value);
+            }
             color: {
                 let p = (ramUsed.value / ramTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.ramColor;
@@ -452,6 +479,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 if (ramUsed.value === undefined || ramTotal.value === undefined)
                     return "";
@@ -480,6 +510,10 @@ PlasmoidItem {
                 let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
                 return mode === 0 ? percent(swapUsed.value, swapTotal.value) : formatBytes(swapUsed.value);
             }
+            labelWidthHint: {
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                return mode === 0 ? "100%" : bytesWidthHint(swapTotal.value);
+            }
             color: {
                 let p = (swapUsed.value / swapTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.swapColor;
@@ -490,6 +524,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 if (swapUsed.value === undefined || swapTotal.value === undefined)
                     return "";
@@ -512,6 +549,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/up.svg")
             label: netUp.value !== undefined && formatBytes(netUp.value || 0, customData ? customData.speedFormat : -1)
+            labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uploadColor;
                 return evaluateModuleColor(customData, netUp.value, baseCol);
@@ -521,6 +559,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (netUp.value !== undefined)
@@ -545,6 +586,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/down.svg")
             label: netDown.value !== undefined && formatBytes(netDown.value || 0, customData ? customData.speedFormat : -1)
+            labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.downloadColor;
                 return evaluateModuleColor(customData, netDown.value, baseCol);
@@ -554,6 +596,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let rows = [];
                 if (netDown.value !== undefined)
@@ -587,6 +632,7 @@ PlasmoidItem {
 
                 return val + "°C";
             }
+            labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
                 return evaluateModuleColor(customData, cpuTemp.value, baseCol);
@@ -596,6 +642,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
                 let c = evaluateModuleColor(customData, cpuTemp.value, baseCol);
@@ -622,6 +671,7 @@ PlasmoidItem {
 
                 return val + "°C";
             }
+            labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
                 return evaluateModuleColor(customData, gpuTemp.value, baseCol);
@@ -631,6 +681,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
                 let c = evaluateModuleColor(customData, gpuTemp.value, baseCol);
@@ -648,6 +701,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
+            labelWidthHint: "99.9 GB"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
                 return evaluateModuleColor(customData, vramUsed.value, baseCol);
@@ -657,6 +711,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
                 let c = evaluateModuleColor(customData, vramUsed.value, baseCol);
@@ -674,6 +731,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/uptime.svg")
             label: uptime.value !== undefined ? formatUptime(uptime.value || 0) : "0s"
+            labelWidthHint: uptimeWidthHint(uptime.value)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
                 return evaluateModuleColor(customData, uptime.value, baseCol);
@@ -683,6 +741,9 @@ PlasmoidItem {
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: Plasmoid.configuration.showTooltips
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
                 let c = evaluateModuleColor(customData, uptime.value, baseCol);
@@ -700,12 +761,16 @@ PlasmoidItem {
 
             icon: customData ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : ""
             label: customData ? (customData.formattedValue || (customData.value !== undefined ? (typeof customData.value === "number" ? Math.round(customData.value * 100) / 100 : customData.value) : "N/A")) : "N/A"
+            labelWidthHint: "100%"
             color: customData ? evaluateModuleColor(customData, customData.value, customData.customColor) : "#ffffff"
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
             showIcon: Plasmoid.configuration.showIcons
             showTooltips: false
+            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
+            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
+            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: customData ? makeTooltipHtml(customData.label.toUpperCase(), evaluateModuleColor(customData, customData.value, customData.customColor), []) : ""
         }
 
