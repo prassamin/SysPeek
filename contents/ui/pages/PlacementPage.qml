@@ -18,7 +18,7 @@ Item {
         return (s === "" || s === "system" || s === "#ffffff" || s === "#fff") ? String(Kirigami.Theme.textColor) : c;
     }
 
-    property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "vram", "uptime"]
+    property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "uptime"]
     property var availableItems: {
         var items = baseAvailableItems.slice();
         try {
@@ -65,10 +65,6 @@ Item {
             "gpu_temp": {
                 "name": "GPU TEMP",
                 "color": cfg.gpuTempColor || "#ffffff"
-            },
-            "vram": {
-                "name": "VRAM",
-                "color": cfg.vramColor || "#ffffff"
             },
             "uptime": {
                 "name": "UPTIME",
@@ -206,6 +202,72 @@ Item {
         id: sensorTree
     }
 
+    function getModuleSensorId(moduleId) {
+        try {
+            var mods = JSON.parse(cfg.customModules || "[]");
+            for (var i = 0; i < mods.length; i++) {
+                if (mods[i].id === moduleId && mods[i].sensorId) {
+                    return mods[i].sensorId;
+                }
+            }
+        } catch (e) {
+        }
+        return "";
+    }
+
+    property var gpuTempCandidates: [
+        "gpu/gpu0/temperature",
+        "gpu/gpu1/temperature",
+        "gpu/gpu2/temperature"
+    ]
+    property string autoResolvedGpuTempSensorId: ""
+    property bool gpuTempProbeResolved: false
+
+    Item {
+        id: gpuTempProbeResolver
+        visible: false
+
+        Repeater {
+            model: page.gpuTempCandidates
+            delegate: Item {
+                property string candId: modelData
+                Sensors.Sensor {
+                    sensorId: !page.autoResolvedGpuTempSensorId ? candId : ""
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuTempSensorId) {
+                            page.autoResolvedGpuTempSensorId = candId;
+                            page.gpuTempProbeResolved = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            interval: 1500
+            running: !page.gpuTempProbeResolved
+            onTriggered: {
+                page.gpuTempProbeResolved = true;
+            }
+        }
+    }
+
+    Sensors.Sensor {
+        id: customGpuTempProbe
+        sensorId: page.getModuleSensorId("gpu_temp")
+    }
+
+    function isModuleInvalid(itemId) {
+        if (itemId === "gpu_temp") {
+            let customId = page.getModuleSensorId("gpu_temp");
+            if (customId) {
+                return customGpuTempProbe.status === Sensors.Sensor.Error;
+            }
+            return page.gpuTempProbeResolved && page.autoResolvedGpuTempSensorId === "";
+        }
+        return false;
+    }
+
     Connections {
         function onPanelLayoutChanged() {
             // Avoid recursive updates if we just saved
@@ -225,12 +287,13 @@ Item {
             id: ghostItem
 
             property string itemId
+            readonly property bool isInvalid: page.isModuleInvalid(itemId)
 
             width: 116
             height: 36
             radius: 6
-            color: Components.Theme.controlBg
-            border.color: Components.Theme.accentCol
+            color: isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.25) : Components.Theme.controlBg
+            border.color: isInvalid ? Components.Theme.dangerCol : Components.Theme.accentCol
             border.width: 2
             z: 99999
             Drag.active: true
@@ -245,7 +308,7 @@ Item {
                 width: parent.width + 16
                 height: parent.height + 16
                 radius: 14
-                color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.15)
+                color: ghostItem.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.15) : Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.15)
                 z: -1
 
                 Rectangle {
@@ -253,7 +316,7 @@ Item {
                     width: parent.width - 8
                     height: parent.height - 8
                     radius: 10
-                    color: Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.3)
+                    color: ghostItem.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.3) : Qt.rgba(Components.Theme.accentCol.r, Components.Theme.accentCol.g, Components.Theme.accentCol.b, 0.3)
                 }
 
             }
@@ -267,17 +330,25 @@ Item {
                     width: 4
                     height: 16
                     radius: 2
-                    color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
+                    color: ghostItem.isInvalid ? Components.Theme.dangerCol : (page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary)
                 }
 
                 Text {
                     text: page.itemMetadata[itemId] ? page.itemMetadata[itemId].name : itemId
-                    color: Components.Theme.textPrimary
+                    color: ghostItem.isInvalid ? Components.Theme.dangerCol : Components.Theme.textPrimary
                     font.pixelSize: 11
                     font.bold: true
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     maximumLineCount: 1
+                }
+
+                Kirigami.Icon {
+                    visible: ghostItem.isInvalid
+                    Layout.preferredWidth: 14
+                    Layout.preferredHeight: 14
+                    source: "dialog-warning-symbolic"
+                    color: Components.Theme.dangerCol
                 }
 
             }
@@ -898,12 +969,15 @@ Item {
     }
 
     component ChipVisuals: Rectangle {
+        id: chipRoot
+
         property string itemId
+        readonly property bool isInvalid: page.isModuleInvalid(itemId)
 
         radius: 6
-        color: Components.Theme.controlBg
-        border.color: Components.Theme.controlBorder
-        border.width: 1
+        color: chipRoot.isInvalid ? Qt.rgba(Components.Theme.dangerCol.r, Components.Theme.dangerCol.g, Components.Theme.dangerCol.b, 0.2) : Components.Theme.controlBg
+        border.color: chipRoot.isInvalid ? Components.Theme.dangerCol : Components.Theme.controlBorder
+        border.width: chipRoot.isInvalid ? 1.5 : 1
 
         RowLayout {
             anchors.fill: parent
@@ -914,12 +988,12 @@ Item {
                 width: 4
                 height: 16
                 radius: 2
-                color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
+                color: chipRoot.isInvalid ? Components.Theme.dangerCol : (page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary)
             }
 
             Text {
                 text: page.itemMetadata[itemId] ? page.itemMetadata[itemId].name : itemId
-                color: Components.Theme.textPrimary
+                color: chipRoot.isInvalid ? Components.Theme.dangerCol : Components.Theme.textPrimary
                 font.pixelSize: 11
                 font.bold: true
                 Layout.fillWidth: true
@@ -927,6 +1001,25 @@ Item {
                 maximumLineCount: 1
             }
 
+            Kirigami.Icon {
+                visible: chipRoot.isInvalid
+                Layout.preferredWidth: 14
+                Layout.preferredHeight: 14
+                source: "dialog-warning-symbolic"
+                color: Components.Theme.dangerCol
+            }
+
+        }
+
+        HoverHandler {
+            id: chipHover
+        }
+
+        QQC2.ToolTip {
+            visible: chipHover.hovered && chipRoot.isInvalid
+            delay: 300
+            timeout: -1
+            text: i18n("Sensor not found.\nPlease select a valid sensor in the Modules section.")
         }
 
     }

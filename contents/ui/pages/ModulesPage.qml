@@ -92,15 +92,8 @@ Flickable {
             "id": "gpu_temp",
             "label": "GPU TEMP",
             "icon": "temp.svg",
-            "sensorId": "gpu/all/temperature",
+            "sensorId": page.autoResolvedGpuTempSensorId || (page.gpuTempResolved ? "" : "gpu/gpu0/temperature"),
             "color": String(cfg.gpuTempColor),
-            "isBuiltIn": true
-        }, {
-            "id": "vram",
-            "label": "VRAM",
-            "icon": "gpu.svg",
-            "sensorId": "gpu/all/usedVram",
-            "color": String(cfg.vramColor),
             "isBuiltIn": true
         }, {
             "id": "uptime",
@@ -116,6 +109,9 @@ Flickable {
                 if (customMods[j].id === builtIn[i].id) {
                     var merged = JSON.parse(JSON.stringify(builtIn[i])); // start with defaults
                     var userMod = customMods[j];
+                    if (userMod.sensorId)
+                        merged.sensorId = userMod.sensorId;
+
                     if (userMod.icon)
                         merged.icon = userMod.icon;
 
@@ -193,6 +189,44 @@ Flickable {
         id: sensorTree
     }
 
+    property var gpuTempCandidates: [
+        "gpu/gpu0/temperature",
+        "gpu/gpu1/temperature",
+        "gpu/gpu2/temperature"
+    ]
+    property string autoResolvedGpuTempSensorId: ""
+    property bool gpuTempResolved: false
+
+    Item {
+        id: gpuTempResolver
+        visible: false
+
+        Repeater {
+            model: page.gpuTempCandidates
+            delegate: Item {
+                property string candId: modelData
+                Sensors.Sensor {
+                    sensorId: !page.autoResolvedGpuTempSensorId ? candId : ""
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuTempSensorId) {
+                            page.autoResolvedGpuTempSensorId = candId;
+                            page.gpuTempResolved = true;
+                            page.refreshModules();
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            interval: 1500
+            running: !page.gpuTempResolved
+            onTriggered: {
+                page.gpuTempResolved = true;
+            }
+        }
+    }
+
     Sensors.Sensor {
         id: ramTotal
 
@@ -239,10 +273,6 @@ Flickable {
         }
 
         function onGpuTempColorChanged() {
-            page.refreshModules();
-        }
-
-        function onVramColorChanged() {
             page.refreshModules();
         }
 
@@ -570,7 +600,11 @@ Flickable {
             addDialog.editingModuleId = moduleData.id;
             addDialog.selectedIcon = String(moduleData.icon || "");
             addDialog.userEditedLabel = true;
-            idField.text = String(moduleData.sensorId || "");
+            var initialSensorId = String(moduleData.sensorId || "");
+            if (moduleData.id === "gpu_temp" && (!initialSensorId || initialSensorId === "gpu/gpu0/temperature") && page.autoResolvedGpuTempSensorId) {
+                initialSensorId = page.autoResolvedGpuTempSensorId;
+            }
+            idField.text = initialSensorId;
             labelField.text = String(moduleData.label || "");
             colorField.text = page.normalizeColorInput(moduleData.color);
             addDialog.currentDisplayMode = moduleData.displayMode !== undefined ? moduleData.displayMode : 0;
@@ -617,8 +651,7 @@ Flickable {
                 "tempUnit": addDialog.currentTempUnit,
                 "conditions": conds
             };
-            // Only add sensorId for truly custom modules (built-ins have it hardcoded)
-            if (!addDialog.isEditingBuiltIn)
+            if (idField.text.trim() !== "")
                 modData.sensorId = idField.text.trim();
 
             mods.push(modData);
@@ -801,7 +834,6 @@ Flickable {
 
                     // 1. SENSOR EXPLORER CARD
                     Rectangle {
-                        visible: !addDialog.isEditingBuiltIn
                         Layout.fillWidth: true
                         Layout.preferredHeight: 180
                         color: Components.Theme.controlBg

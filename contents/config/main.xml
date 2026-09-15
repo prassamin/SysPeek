@@ -111,10 +111,6 @@
             <label>GPU Temp Color</label>
             <default>#ffffff</default>
         </entry>
-        <entry name="vramColor" type="Color">
-            <label>VRAM Color</label>
-            <default>#ffffff</default>
-        </entry>
         <entry name="batteryColor" type="Color">
             <label>Battery Color</label>
             <default>#ffffff</default>

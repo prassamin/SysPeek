@@ -265,94 +265,170 @@ PlasmoidItem {
         }
     }
 
+    readonly property var activeModuleSet: {
+        let layoutString = Plasmoid.configuration.panelLayout || "cpu|gpu|ram|swap|upload|download";
+        let tokens = layoutString.split(/[|,]/);
+        let set = {};
+        for (let i = 0; i < tokens.length; i++) {
+            let t = tokens[i].trim();
+            if (t !== "") {
+                set[t] = true;
+            }
+        }
+        return set;
+    }
+
+    function isModuleActive(id) {
+        return !!activeModuleSet[id];
+    }
+
+    property var gpuTempCandidates: [
+        "gpu/gpu0/temperature",
+        "gpu/gpu1/temperature",
+        "gpu/gpu2/temperature"
+    ]
+    property string autoResolvedGpuTempSensorId: ""
+    property bool gpuTempResolved: false
+
+    Item {
+        id: gpuTempResolver
+        visible: false
+
+        Repeater {
+            model: root.gpuTempCandidates
+            delegate: Item {
+                property string candId: modelData
+                Sensors.Sensor {
+                    sensorId: (isModuleActive("gpu_temp") && !root.autoResolvedGpuTempSensorId) ? candId : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !root.autoResolvedGpuTempSensorId) {
+                            root.autoResolvedGpuTempSensorId = candId;
+                            root.gpuTempResolved = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            interval: 1500
+            running: isModuleActive("gpu_temp") && !root.gpuTempResolved
+            onTriggered: {
+                root.gpuTempResolved = true;
+            }
+        }
+    }
+
     Sensors.Sensor {
         id: cpu
 
-        sensorId: "cpu/all/usage"
+        sensorId: {
+            if (!isModuleActive("cpu")) return "";
+            let customData = getCustomSensorData("cpu");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return "cpu/all/usage";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: gpu
 
-        sensorId: "gpu/all/usage"
+        sensorId: {
+            if (!isModuleActive("gpu")) return "";
+            let customData = getCustomSensorData("gpu");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return "gpu/all/usage";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: ramUsed
 
-        sensorId: "memory/physical/used"
+        sensorId: isModuleActive("ram") ? "memory/physical/used" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: ramTotal
 
-        sensorId: "memory/physical/total"
+        sensorId: isModuleActive("ram") ? "memory/physical/total" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: swapUsed
 
-        sensorId: "memory/swap/used"
+        sensorId: isModuleActive("swap") ? "memory/swap/used" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: swapTotal
 
-        sensorId: "memory/swap/total"
+        sensorId: isModuleActive("swap") ? "memory/swap/total" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: netUp
 
-        sensorId: "network/all/upload"
+        sensorId: isModuleActive("upload") ? "network/all/upload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: netDown
 
-        sensorId: "network/all/download"
+        sensorId: isModuleActive("download") ? "network/all/download" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: totalUploadedBytes
 
-        sensorId: "network/all/totalUpload"
+        sensorId: isModuleActive("upload") ? "network/all/totalUpload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: totalDownloadedBytes
 
-        sensorId: "network/all/totalDownload"
+        sensorId: isModuleActive("download") ? "network/all/totalDownload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: cpuTemp
 
-        sensorId: "cpu/all/averageTemperature"
+        sensorId: {
+            if (!isModuleActive("cpu_temp")) return "";
+            let customData = getCustomSensorData("cpu_temp");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return "cpu/all/averageTemperature";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: gpuTemp
 
-        sensorId: "gpu/all/temperature"
-    }
-
-    Sensors.Sensor {
-        id: vramUsed
-
-        sensorId: "gpu/all/usedVram"
-    }
-
-    Sensors.Sensor {
-        id: vramTotal
-
-        sensorId: "gpu/all/totalVram"
+        sensorId: {
+            if (!isModuleActive("gpu_temp")) return "";
+            let customData = getCustomSensorData("gpu_temp");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return root.autoResolvedGpuTempSensorId;
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: uptime
 
-        sensorId: "os/system/uptime"
+        sensorId: isModuleActive("uptime") ? "os/system/uptime" : ""
+        updateRateLimit: 1000
     }
 
     Item {
@@ -385,7 +461,8 @@ PlasmoidItem {
                 Sensors.Sensor {
                     id: sensor
 
-                    sensorId: modelData.sensorId || ""
+                    sensorId: (isModuleActive(modelData.id) && modelData.sensorId && modelData.id.startsWith("custom_")) ? modelData.sensorId : ""
+                    updateRateLimit: 1000
                 }
 
             }
@@ -685,6 +762,12 @@ PlasmoidItem {
 
         MonitorItem {
             property var customData: getCustomSensorData("gpu_temp")
+            readonly property bool isSensorFailed: {
+                if (customData && customData.sensorId) {
+                    return gpuTemp.status === Sensors.Sensor.Error;
+                }
+                return root.gpuTempResolved && root.autoResolvedGpuTempSensorId === "";
+            }
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/temp.svg")
             label: {
@@ -699,6 +782,9 @@ PlasmoidItem {
             }
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
+                if (isSensorFailed)
+                    return Kirigami.Theme.negativeTextColor;
+
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
                 return widgetColor(customData, gpuTemp.value, baseCol);
             }
@@ -711,39 +797,12 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
+                if (isSensorFailed)
+                    return makeTooltipHtml("GPU TEMP", Kirigami.Theme.negativeTextColor, [["Error:", "Sensor not found. Select sensor in Modules settings."]]);
+
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
                 let c = evaluateModuleColor(customData, gpuTemp.value, baseCol);
                 return makeTooltipHtml("GPU TEMP", c, []);
-            }
-        }
-
-    }
-
-    Component {
-        id: compVram
-
-        MonitorItem {
-            property var customData: getCustomSensorData("vram")
-
-            icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
-            label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
-            labelWidthHint: bytesWidthHint(vramTotal.value)
-            color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
-                return widgetColor(customData, vramUsed.value, baseCol);
-            }
-            iconTextSpacing: Plasmoid.configuration.iconTextSpacing
-            fontSize: Plasmoid.configuration.fontSize
-            fontFamily: Plasmoid.configuration.fontFamily
-            showIcon: Plasmoid.configuration.showIcons
-            showTooltips: Plasmoid.configuration.showTooltips
-            fixedLabelWidth: Plasmoid.configuration.fixedLabelWidth
-            labelTextAlignment: Plasmoid.configuration.labelTextAlignment
-            fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
-            tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
-                let c = evaluateModuleColor(customData, vramUsed.value, baseCol);
-                return makeTooltipHtml("VRAM USED", c, []);
             }
         }
 
@@ -852,8 +911,6 @@ PlasmoidItem {
                                 return compCpuTemp;
                             case "gpu_temp":
                                 return compGpuTemp;
-                            case "vram":
-                                return compVram;
                             case "uptime":
                                 return compUptime;
                             default:
