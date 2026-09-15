@@ -324,6 +324,12 @@ PlasmoidItem {
     }
 
     Sensors.Sensor {
+        id: vramTotal
+
+        sensorId: "gpu/all/totalVram"
+    }
+
+    Sensors.Sensor {
         id: uptime
 
         sensorId: "os/system/uptime"
@@ -701,7 +707,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
-            labelWidthHint: "99.9 GB"
+            labelWidthHint: bytesWidthHint(vramTotal.value)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
                 return evaluateModuleColor(customData, vramUsed.value, baseCol);
