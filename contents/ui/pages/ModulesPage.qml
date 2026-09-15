@@ -19,6 +19,18 @@ Flickable {
         return total > 0 ? Math.round(val / total * 100) + "%" : "N/A";
     }
 
+    // "system" (and the legacy default white) means follow the color scheme.
+    function resolveColor(c) {
+        let s = String(c || "").trim().toLowerCase();
+        return (s === "" || s === "system" || s === "#ffffff" || s === "#fff") ? String(Kirigami.Theme.textColor) : c;
+    }
+
+    // Maps legacy default white to "system" so the chip shows as selected.
+    function normalizeColorInput(c) {
+        let s = String(c || "").trim().toLowerCase();
+        return (s === "" || s === "#ffffff" || s === "#fff") ? "system" : String(c).trim();
+    }
+
     function refreshModules() {
         var customMods = [];
         try {
@@ -410,7 +422,7 @@ Flickable {
                                 width: 12
                                 height: 12
                                 radius: 6
-                                color: modelData.color
+                                color: page.resolveColor(modelData.color)
                             }
 
                             Text {
@@ -560,7 +572,7 @@ Flickable {
             addDialog.userEditedLabel = true;
             idField.text = String(moduleData.sensorId || "");
             labelField.text = String(moduleData.label || "");
-            colorField.text = String(moduleData.color || "#ffffff");
+            colorField.text = page.normalizeColorInput(moduleData.color);
             addDialog.currentDisplayMode = moduleData.displayMode !== undefined ? moduleData.displayMode : 0;
             addDialog.currentSpeedFormat = moduleData.speedFormat !== undefined ? moduleData.speedFormat : -1;
             addDialog.currentTempUnit = moduleData.tempUnit !== undefined ? moduleData.tempUnit : 0;
@@ -599,7 +611,7 @@ Flickable {
                 "id": newId,
                 "label": labelField.text.trim(),
                 "icon": addDialog.selectedIcon,
-                "color": colorField.text.trim() || "#ffffff",
+                "color": colorField.text.trim() || "system",
                 "displayMode": addDialog.currentDisplayMode,
                 "speedFormat": addDialog.currentSpeedFormat,
                 "tempUnit": addDialog.currentTempUnit,
@@ -630,7 +642,7 @@ Flickable {
                 addDialog.userEditedLabel = false;
                 idField.text = "";
                 labelField.text = "";
-                colorField.text = "#ffffff";
+                colorField.text = "system";
             }
         }
 
@@ -1070,8 +1082,50 @@ Flickable {
                                 Layout.fillWidth: true
                                 spacing: 8
 
+                                Rectangle {
+                                    id: systemColorChip
+
+                                    readonly property bool selected: String(colorField.text).trim().toLowerCase() === "system"
+
+                                    width: systemChipRow.implicitWidth + 16
+                                    height: 24
+                                    radius: 8
+                                    color: selected ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.05)
+                                    border.color: selected ? "white" : Qt.rgba(1, 1, 1, 0.15)
+                                    border.width: selected ? 2 : 1
+
+                                    RowLayout {
+                                        id: systemChipRow
+
+                                        anchors.centerIn: parent
+                                        spacing: 6
+
+                                        Rectangle {
+                                            width: 12
+                                            height: 12
+                                            radius: 6
+                                            color: Kirigami.Theme.textColor
+                                        }
+
+                                        Text {
+                                            text: "System"
+                                            color: Components.Theme.textPrimary
+                                            font.pixelSize: 11
+                                            font.bold: systemColorChip.selected
+                                        }
+
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: colorField.text = "system"
+                                    }
+
+                                }
+
                                 Repeater {
-                                    model: ["#ffffff", Components.Theme.accentCol, Components.Theme.successCol, Components.Theme.warningCol, Components.Theme.dangerCol, "#0ea5e9", "#a855f7"]
+                                    model: [Components.Theme.accentCol, Components.Theme.successCol, Components.Theme.warningCol, Components.Theme.dangerCol, "#0ea5e9", "#a855f7"]
 
                                     delegate: Components.ColorSwatch {
                                         width: 24
@@ -1089,17 +1143,18 @@ Flickable {
 
                             RowLayout {
                                 Layout.fillWidth: true
+                                visible: colorField.text !== "system"
                                 spacing: 12
 
                                 Components.ColorSwatch {
-                                    colorValue: colorField.text
+                                    colorValue: page.resolveColor(colorField.text)
                                     width: 36
                                     height: 36
                                     onClicked: {
                                         masterColorDialog.targetObject = colorField;
                                         masterColorDialog.targetProperty = "text";
                                         masterColorDialog.targetIndex = -1;
-                                        masterColorDialog.selectedColor = colorField.text;
+                                        masterColorDialog.selectedColor = page.resolveColor(colorField.text);
                                         masterColorDialog.open();
                                     }
                                 }
@@ -1119,7 +1174,7 @@ Flickable {
                                         verticalAlignment: TextInput.AlignVCenter
                                         color: Components.Theme.textPrimary
                                         font.pixelSize: 12
-                                        text: "#ffffff"
+                                        text: "system"
                                     }
 
                                 }
@@ -1756,7 +1811,7 @@ Flickable {
 
                                     return previewSensor.formattedValue || (previewSensor.value !== undefined ? Math.round(previewSensor.value) : "N/A");
                                 }
-                                color: parent.parent.evaluatePreviewColor((previewSensor.value !== undefined ? previewSensor.value : 75), colorField.text, tempConditionsModel.count)
+                                color: parent.parent.evaluatePreviewColor((previewSensor.value !== undefined ? previewSensor.value : 75), page.resolveColor(colorField.text), tempConditionsModel.count)
                                 fontSize: cfg.fontSize || 10
                                 fontFamily: cfg.fontFamily || ""
                                 showIcon: true

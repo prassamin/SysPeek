@@ -11,6 +11,13 @@ Item {
 
     property var cfg
     property Item edgeSafeContainer: null
+
+    // "system" (and the legacy default white) means follow the color scheme.
+    function resolveColor(c) {
+        let s = String(c || "").trim().toLowerCase();
+        return (s === "" || s === "system" || s === "#ffffff" || s === "#fff") ? String(Kirigami.Theme.textColor) : c;
+    }
+
     property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "vram", "uptime"]
     property var availableItems: {
         var items = baseAvailableItems.slice();
@@ -260,7 +267,7 @@ Item {
                     width: 4
                     height: 16
                     radius: 2
-                    color: page.itemMetadata[itemId] ? page.itemMetadata[itemId].color : Components.Theme.textSecondary
+                    color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
                 }
 
                 Text {
@@ -907,7 +914,7 @@ Item {
                 width: 4
                 height: 16
                 radius: 2
-                color: page.itemMetadata[itemId] ? page.itemMetadata[itemId].color : Components.Theme.textSecondary
+                color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
             }
 
             Text {

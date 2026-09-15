@@ -69,7 +69,7 @@
         </entry>
         <entry name="labelTextAlignment" type="Int">
             <label>Value Label Text Alignment (0=Left, 1=Right, 2=Center)</label>
-            <default>1</default>
+            <default>0</default>
         </entry>
         <entry name="fixedLabelWidthExtra" type="Int">
             <label>Extra Pixels Added to Reserved Value Width</label>

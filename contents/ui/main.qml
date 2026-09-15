@@ -28,7 +28,7 @@ PlasmoidItem {
         if (parts.length === 2)
             return `
                 <b>${parts[0]}</b>
-                <span style='color: #94a3b8; font-size: 9px; font-weight: normal;'>
+                <span style='color: ${Kirigami.Theme.disabledTextColor}; font-size: 9px; font-weight: normal;'>
                     ${parts[1]}
                 </span>
             `.trim();
@@ -38,21 +38,22 @@ PlasmoidItem {
 
     function makeTooltipHtml(title, color, rows) {
         let font = (Plasmoid.configuration.fontFamily !== "") ? Plasmoid.configuration.fontFamily : "sans-serif";
+        let accent = String(resolveModuleColor(color));
         let tableRows = "";
         for (let i = 0; i < rows.length; i++) {
-            tableRows += `<tr><td style='color:#94a3b8; font-size:11px; padding:3px 20px 3px 0;'>${rows[i][0]}</td><td style='padding:3px 0; font-size:11px;'>${formatRichValue(rows[i][1])}</td></tr>`;
+            tableRows += `<tr><td style='color:${Kirigami.Theme.disabledTextColor}; font-size:11px; padding:3px 20px 3px 0;'>${rows[i][0]}</td><td style='padding:3px 0; font-size:11px;'>${formatRichValue(rows[i][1])}</td></tr>`;
         }
         return `
             <div style='font-family: "${font}", sans-serif; min-width: 150px;'>
                 <table border='0' cellspacing='0' cellpadding='0'>
                     <tr>
                         <!-- Left Accent Bar Pill -->
-                        <td style='width: 3px; background-color: ${color};'></td>
+                        <td style='width: 3px; background-color: ${accent};'></td>
 
                         <!-- Right Content Cell -->
                         <td style='padding-left: 12px; vertical-align: top;'>
                             <!-- Dynamic Accent Header Title -->
-                            <div style='font-size: 10px; font-weight: 800; color: ${color}; letter-spacing: 1.2px;'>${title}</div>
+                            <div style='font-size: 10px; font-weight: 800; color: ${accent}; letter-spacing: 1.2px;'>${title}</div>
 
                             <!-- Key-Value Grid -->
                             <table border='0' cellspacing='0' cellpadding='0'>
@@ -111,6 +112,12 @@ PlasmoidItem {
         return formatBytes(totalBytes);
     }
 
+    function netSpeedWidthHint(overrideFmt) {
+        let fmt = (overrideFmt !== undefined && overrideFmt !== -1) ? overrideFmt : Plasmoid.configuration.netSpeedFormat;
+        let isBits = (fmt === 2 || fmt === 3);
+        return isBits ? "99.9 Mbps" : "99.9 MB";
+    }
+
     function formatUptime(seconds) {
         if (!seconds)
             return "0s";
@@ -150,11 +157,11 @@ PlasmoidItem {
         return null;
     }
 
-    // The default module color is white; treat it as "follow the color scheme" so
-    // labels and icons stay legible on light desktop themes.
+    // "system" (and the legacy default white) follows the color scheme so labels
+    // and icons stay legible on light desktop themes.
     function resolveModuleColor(color) {
-        let c = String(color || "").toLowerCase();
-        return (c === "" || c === "#ffffff" || c === "#fff") ? Kirigami.Theme.textColor : color;
+        let c = String(color || "").trim().toLowerCase();
+        return (c === "" || c === "system" || c === "#ffffff" || c === "#fff") ? Kirigami.Theme.textColor : color;
     }
 
     function evaluateModuleColor(customData, rawValue, fallbackColor) {
@@ -568,7 +575,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/up.svg")
             label: netUp.value !== undefined && formatBytes(netUp.value || 0, customData ? customData.speedFormat : -1)
-            labelWidthHint: "999.9 Mbps"
+            labelWidthHint: netSpeedWidthHint(customData ? customData.speedFormat : -1)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uploadColor;
                 return widgetColor(customData, netUp.value, baseCol);
@@ -605,7 +612,7 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/down.svg")
             label: netDown.value !== undefined && formatBytes(netDown.value || 0, customData ? customData.speedFormat : -1)
-            labelWidthHint: "999.9 Mbps"
+            labelWidthHint: netSpeedWidthHint(customData ? customData.speedFormat : -1)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.downloadColor;
                 return widgetColor(customData, netDown.value, baseCol);
@@ -653,7 +660,7 @@ PlasmoidItem {
             }
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuTempColor;
                 return widgetColor(customData, cpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
@@ -665,7 +672,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuTempColor;
                 let c = evaluateModuleColor(customData, cpuTemp.value, baseCol);
                 return makeTooltipHtml("CPU TEMP", c, []);
             }
@@ -692,7 +699,7 @@ PlasmoidItem {
             }
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
                 return widgetColor(customData, gpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
@@ -704,7 +711,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
                 let c = evaluateModuleColor(customData, gpuTemp.value, baseCol);
                 return makeTooltipHtml("GPU TEMP", c, []);
             }
@@ -722,7 +729,7 @@ PlasmoidItem {
             label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
             labelWidthHint: bytesWidthHint(vramTotal.value)
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
                 return widgetColor(customData, vramUsed.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
@@ -734,7 +741,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
                 let c = evaluateModuleColor(customData, vramUsed.value, baseCol);
                 return makeTooltipHtml("VRAM USED", c, []);
             }
@@ -752,7 +759,7 @@ PlasmoidItem {
             label: uptime.value !== undefined ? formatUptime(uptime.value || 0) : "0s"
             labelWidthHint: uptimeWidthHint(uptime.value)
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uptimeColor;
                 return widgetColor(customData, uptime.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
@@ -764,7 +771,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uptimeColor;
                 let c = evaluateModuleColor(customData, uptime.value, baseCol);
                 return makeTooltipHtml("UPTIME", c, []);
             }
