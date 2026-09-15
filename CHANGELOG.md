@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## [v2.1.0] - 2026-09-15
+
+### Added
+- **Human-Friendly Condition Units & Evaluation Engine** ([#12](https://github.com/prassamin/SysPeek/issues/12)):
+  - Added context-aware unit dropdowns next to threshold inputs in the condition editor (`%`, `MB/s`, `KB/s`, `GB`, `MB`, `°C`, `°F`, `s`, `m`, `h`, `d`, etc.).
+  - Implemented automatic runtime conversion of human-readable values to raw sensor units.
+  - Added dual-value evaluation for memory modules (`RAM`, `SWAP`, `VRAM`), supporting threshold comparisons against both percentage and raw byte totals.
+  - Full backwards compatibility with automatic migration of legacy byte thresholds (e.g., `1048576` to `1 MB/s`).
+- **Parallel GPU Scanner & Dedicated GPU Prioritization** ([#12](https://github.com/prassamin/SysPeek/issues/12), [#16](https://github.com/prassamin/SysPeek/issues/16)):
+  - Centralized multi-probe GPU scanner scanning `gpu0` through `gpu8` simultaneously.
+  - Automatically identifies and prioritizes dedicated GPUs (dGPU) over integrated graphics (iGPU) for temperature, usage, and VRAM.
+- **Built-in VRAM Module**:
+  - Restored full VRAM monitoring support integrated with auto-detected GPU prefix.
+  - Configurable display mode toggle between **Percentage** (`%`) and **Value** (`GB/MB`).
+  - Integrated into Live Preview Card and Placement Page grid layout builder.
+- **Sensor Explorer Overrides for Built-in Modules** ([#18](https://github.com/prassamin/SysPeek/issues/18)):
+  - Built-in modules (CPU, GPU, RAM, Swap, Temp, etc.) now support custom Sensor ID overrides via the interactive Sensor Explorer tree.
+- **Fixed Value Label Width & Text Alignment** ([#11](https://github.com/prassamin/SysPeek/issues/11), [#13](https://github.com/prassamin/SysPeek/issues/13), [#17](https://github.com/prassamin/SysPeek/pull/17)):
+  - Anti-jitter fixed label width reservations utilizing `TextMetrics` and dynamic width hints (`100%`, total memory size, network speed format, 3-digit uptime).
+  - Configurable text alignment settings (**Left**, **Center**, **Right**) under Layout settings.
+  - Configurable extra width padding (`fixedLabelWidthExtra`) to fine-tune spacing between modules.
+- **New Distinct GPU Icon** ([#11](https://github.com/prassamin/SysPeek/issues/11)):
+  - Replaced the generic chip silhouette with a dedicated graphics card design featuring PCIe bracket, card shroud, and cooling fans.
+
+### Changed
+- **System Theme Color Support**:
+  - Module colors set to default white or "system" now dynamically follow the active desktop color scheme (`Kirigami.Theme.textColor`), ensuring high contrast and legibility on both dark and light desktop themes.
+- **Placement Builder Refinements**:
+  - Streamlined module placement and drag-and-drop tiles in the layout builder to prevent layout collapse and simplify custom module organization.
+
+### Performance
+- **Selective Sensor Subscriptions & Reduced Polling** ([#15](https://github.com/prassamin/SysPeek/issues/15)):
+  - Inactive modules that are not placed on the panel now automatically unsubscribe from sensor polling (`enabled: isModuleActive(...)`), drastically reducing background CPU and D-Bus usage.
+  - Applied `updateRateLimit: 1000` to background temperature and usage probe sensors during GPU device scanning.
+
+### Fixed
+- **VRAM and Outgrowing Label Stability**: Sized VRAM width hint dynamically from total VRAM, and allowed the reserved label slot to expand smoothly without jitter for outgrowing labels.
+- **Dynamic Network Speed Width Hints**: Network speed width hints now update reactively whenever the speed format or unit changes.
+- **QML Lint & Binding Errors**: Cleaned up binding loops, undefined property accesses, and invalid string coercions across all settings pages.
+
 ## [v2.0.0] - 2026-05-20
 
 ### Added
