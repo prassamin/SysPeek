@@ -28,7 +28,7 @@ PlasmoidItem {
         if (parts.length === 2)
             return `
                 <b>${parts[0]}</b>
-                <span style='color: #94a3b8; font-size: 9px; font-weight: normal;'>
+                <span style='color: ${Kirigami.Theme.disabledTextColor}; font-size: 9px; font-weight: normal;'>
                     ${parts[1]}
                 </span>
             `.trim();
@@ -38,21 +38,22 @@ PlasmoidItem {
 
     function makeTooltipHtml(title, color, rows) {
         let font = (Plasmoid.configuration.fontFamily !== "") ? Plasmoid.configuration.fontFamily : "sans-serif";
+        let accent = String(resolveModuleColor(color));
         let tableRows = "";
         for (let i = 0; i < rows.length; i++) {
-            tableRows += `<tr><td style='color:#94a3b8; font-size:11px; padding:3px 20px 3px 0;'>${rows[i][0]}</td><td style='padding:3px 0; font-size:11px;'>${formatRichValue(rows[i][1])}</td></tr>`;
+            tableRows += `<tr><td style='color:${Kirigami.Theme.disabledTextColor}; font-size:11px; padding:3px 20px 3px 0;'>${rows[i][0]}</td><td style='padding:3px 0; font-size:11px;'>${formatRichValue(rows[i][1])}</td></tr>`;
         }
         return `
             <div style='font-family: "${font}", sans-serif; min-width: 150px;'>
                 <table border='0' cellspacing='0' cellpadding='0'>
                     <tr>
                         <!-- Left Accent Bar Pill -->
-                        <td style='width: 3px; background-color: ${color};'></td>
+                        <td style='width: 3px; background-color: ${accent};'></td>
 
                         <!-- Right Content Cell -->
                         <td style='padding-left: 12px; vertical-align: top;'>
                             <!-- Dynamic Accent Header Title -->
-                            <div style='font-size: 10px; font-weight: 800; color: ${color}; letter-spacing: 1.2px;'>${title}</div>
+                            <div style='font-size: 10px; font-weight: 800; color: ${accent}; letter-spacing: 1.2px;'>${title}</div>
 
                             <!-- Key-Value Grid -->
                             <table border='0' cellspacing='0' cellpadding='0'>
@@ -111,6 +112,12 @@ PlasmoidItem {
         return formatBytes(totalBytes);
     }
 
+    function netSpeedWidthHint(overrideFmt) {
+        let fmt = (overrideFmt !== undefined && overrideFmt !== -1) ? overrideFmt : Plasmoid.configuration.netSpeedFormat;
+        let isBits = (fmt === 2 || fmt === 3);
+        return isBits ? "99.9 Mbps" : "99.9 MB";
+    }
+
     function formatUptime(seconds) {
         if (!seconds)
             return "0s";
@@ -150,36 +157,89 @@ PlasmoidItem {
         return null;
     }
 
-    function evaluateModuleColor(customData, rawValue, fallbackColor) {
+    // "system" (and the legacy default white) follows the color scheme so labels
+    // and icons stay legible on light desktop themes.
+    function resolveModuleColor(color) {
+        let c = String(color || "").trim().toLowerCase();
+        return (c === "" || c === "system" || c === "#ffffff" || c === "#fff") ? Kirigami.Theme.textColor : color;
+    }
+
+    function isByteUnit(unit) {
+        return unit === "Bytes" || unit === "KB" || unit === "MB" || unit === "GB" || unit === "TB";
+    }
+
+    function resolveThresholdValue(c) {
+        if (!c || c.threshold === undefined || c.threshold === null)
+            return NaN;
+        var val = parseFloat(c.threshold);
+        if (isNaN(val))
+            return NaN;
+        var unit = c.unit ? String(c.unit).trim() : "";
+        if (unit === "KB" || unit === "KB/s")
+            return val * 1024;
+        if (unit === "MB" || unit === "MB/s")
+            return val * 1048576;
+        if (unit === "GB" || unit === "GB/s")
+            return val * 1073741824;
+        if (unit === "TB" || unit === "TB/s")
+            return val * 1099511627776;
+        if (unit === "Kbps")
+            return (val * 1000) / 8;
+        if (unit === "Mbps")
+            return (val * 1000000) / 8;
+        if (unit === "Gbps")
+            return (val * 1000000000) / 8;
+        if (unit === "°F")
+            return (val - 32) * 5 / 9;
+        if (unit === "m")
+            return val * 60;
+        if (unit === "h")
+            return val * 3600;
+        if (unit === "d")
+            return val * 86400;
+        return val;
+    }
+
+    function evaluateModuleColor(customData, rawValue, fallbackColor, rawByteValue) {
         if (!customData || !customData.conditions || customData.conditions.length === 0)
             return fallbackColor;
 
-        var val = parseFloat(rawValue);
-        if (isNaN(val))
-            return fallbackColor;
+        var numVal = parseFloat(rawValue);
+        var byteVal = (rawByteValue !== undefined && rawByteValue !== null) ? parseFloat(rawByteValue) : NaN;
 
         for (var i = 0; i < customData.conditions.length; i++) {
             var c = customData.conditions[i];
-            var thresh = parseFloat(c.threshold);
+            var thresh = resolveThresholdValue(c);
             if (isNaN(thresh))
                 continue;
 
+            var unit = c.unit ? String(c.unit).trim() : "";
+            var compareVal = (isByteUnit(unit) && !isNaN(byteVal)) ? byteVal : numVal;
+            if (isNaN(compareVal))
+                continue;
+
             var matched = false;
-            if (c.operator === "==" && val === thresh)
+            if (c.operator === "==" && compareVal === thresh)
                 matched = true;
-            else if (c.operator === ">" && val > thresh)
+            else if (c.operator === ">" && compareVal > thresh)
                 matched = true;
-            else if (c.operator === "<" && val < thresh)
+            else if (c.operator === "<" && compareVal < thresh)
                 matched = true;
-            else if (c.operator === ">=" && val >= thresh)
+            else if (c.operator === ">=" && compareVal >= thresh)
                 matched = true;
-            else if (c.operator === "<=" && val <= thresh)
+            else if (c.operator === "<=" && compareVal <= thresh)
                 matched = true;
             if (matched)
                 return c.color;
 
         }
         return fallbackColor;
+    }
+
+    // Same as evaluateModuleColor, but resolves the default white to the current
+    // color scheme so widget labels/icons stay legible on light desktop themes.
+    function widgetColor(customData, rawValue, fallbackColor, rawByteValue) {
+        return resolveModuleColor(evaluateModuleColor(customData, rawValue, fallbackColor, rawByteValue));
     }
 
     // action types: 0 = Launch App, 1 = Open URL, 2 = Run Command, 3 = Do Nothing
@@ -245,88 +305,225 @@ PlasmoidItem {
         }
     }
 
+    readonly property var activeModuleSet: {
+        let layoutString = Plasmoid.configuration.panelLayout || "cpu|gpu|ram|swap|upload|download";
+        let tokens = layoutString.split(/[|,]/);
+        let set = {};
+        for (let i = 0; i < tokens.length; i++) {
+            let t = tokens[i].trim();
+            if (t !== "") {
+                set[t] = true;
+            }
+        }
+        return set;
+    }
+
+    function isModuleActive(id) {
+        return !!activeModuleSet[id];
+    }
+
+    property var gpuCandidatePrefixes: [
+        "gpu/gpu0",
+        "gpu/gpu1",
+        "gpu/gpu2",
+        "gpu/gpu3",
+        "gpu/gpu4",
+        "gpu/gpu5",
+        "gpu/gpu6",
+        "gpu/gpu7",
+        "gpu/gpu8"
+    ]
+    property string autoDetectedGpuPrefix: ""
+    property string autoResolvedGpuUsageSensorId: ""
+    property string autoResolvedGpuTempSensorId: ""
+    property bool gpuScanResolved: false
+
+    Item {
+        id: gpuDeviceScanner
+        visible: false
+
+        Repeater {
+            model: root.gpuCandidatePrefixes
+            delegate: Item {
+                property string prefix: modelData
+
+                Sensors.Sensor {
+                    id: candTempProbe
+                    sensorId: !root.autoResolvedGpuTempSensorId ? (prefix + "/temperature") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready) {
+                            if (!root.autoResolvedGpuTempSensorId || prefix !== "gpu/gpu0") {
+                                root.autoDetectedGpuPrefix = prefix;
+                                root.autoResolvedGpuTempSensorId = prefix + "/temperature";
+                                if (!root.autoResolvedGpuUsageSensorId) {
+                                    root.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                                }
+                                root.gpuScanResolved = true;
+                            }
+                        }
+                    }
+                }
+
+                Sensors.Sensor {
+                    id: candUsageProbe
+                    sensorId: !root.autoResolvedGpuUsageSensorId ? (prefix + "/usage") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !root.autoResolvedGpuUsageSensorId) {
+                            if (!root.autoDetectedGpuPrefix) {
+                                root.autoDetectedGpuPrefix = prefix;
+                            }
+                            root.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            interval: 1500
+            running: !root.gpuScanResolved
+            onTriggered: {
+                if (!root.autoResolvedGpuUsageSensorId) {
+                    root.autoResolvedGpuUsageSensorId = root.autoDetectedGpuPrefix ? (root.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage";
+                }
+                root.gpuScanResolved = true;
+            }
+        }
+    }
+
     Sensors.Sensor {
         id: cpu
 
-        sensorId: "cpu/all/usage"
+        sensorId: {
+            if (!isModuleActive("cpu")) return "";
+            let customData = getCustomSensorData("cpu");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return "cpu/all/usage";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: gpu
 
-        sensorId: "gpu/all/usage"
+        sensorId: {
+            if (!isModuleActive("gpu")) return "";
+            let customData = getCustomSensorData("gpu");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return root.autoResolvedGpuUsageSensorId || (root.autoDetectedGpuPrefix ? (root.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage");
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: ramUsed
 
-        sensorId: "memory/physical/used"
+        sensorId: isModuleActive("ram") ? "memory/physical/used" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: ramTotal
 
-        sensorId: "memory/physical/total"
+        sensorId: isModuleActive("ram") ? "memory/physical/total" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: swapUsed
 
-        sensorId: "memory/swap/used"
+        sensorId: isModuleActive("swap") ? "memory/swap/used" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: swapTotal
 
-        sensorId: "memory/swap/total"
+        sensorId: isModuleActive("swap") ? "memory/swap/total" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: netUp
 
-        sensorId: "network/all/upload"
+        sensorId: isModuleActive("upload") ? "network/all/upload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: netDown
 
-        sensorId: "network/all/download"
+        sensorId: isModuleActive("download") ? "network/all/download" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: totalUploadedBytes
 
-        sensorId: "network/all/totalUpload"
+        sensorId: isModuleActive("upload") ? "network/all/totalUpload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: totalDownloadedBytes
 
-        sensorId: "network/all/totalDownload"
+        sensorId: isModuleActive("download") ? "network/all/totalDownload" : ""
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: cpuTemp
 
-        sensorId: "cpu/all/averageTemperature"
+        sensorId: {
+            if (!isModuleActive("cpu_temp")) return "";
+            let customData = getCustomSensorData("cpu_temp");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return "cpu/all/averageTemperature";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: gpuTemp
 
-        sensorId: "gpu/all/temperature"
+        sensorId: {
+            if (!isModuleActive("gpu_temp")) return "";
+            let customData = getCustomSensorData("gpu_temp");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return root.autoResolvedGpuTempSensorId;
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: vramUsed
 
-        sensorId: "gpu/all/usedVram"
+        sensorId: {
+            if (!isModuleActive("vram")) return "";
+            let customData = getCustomSensorData("vram");
+            if (customData && customData.sensorId) return customData.sensorId;
+            return root.autoDetectedGpuPrefix ? (root.autoDetectedGpuPrefix + "/usedVram") : "gpu/all/usedVram";
+        }
+        updateRateLimit: 1000
+    }
+
+    Sensors.Sensor {
+        id: vramTotal
+
+        sensorId: {
+            if (!isModuleActive("vram")) return "";
+            return root.autoDetectedGpuPrefix ? (root.autoDetectedGpuPrefix + "/totalVram") : "gpu/all/totalVram";
+        }
+        updateRateLimit: 1000
     }
 
     Sensors.Sensor {
         id: uptime
 
-        sensorId: "os/system/uptime"
+        sensorId: isModuleActive("uptime") ? "os/system/uptime" : ""
+        updateRateLimit: 1000
     }
 
     Item {
@@ -359,7 +556,8 @@ PlasmoidItem {
                 Sensors.Sensor {
                     id: sensor
 
-                    sensorId: modelData.sensorId || ""
+                    sensorId: (isModuleActive(modelData.id) && modelData.sensorId && modelData.id.startsWith("custom_")) ? modelData.sensorId : ""
+                    updateRateLimit: 1000
                 }
 
             }
@@ -392,7 +590,7 @@ PlasmoidItem {
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
             labelWidthHint: "100%"
-            color: evaluateModuleColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
+            color: widgetColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -426,7 +624,7 @@ PlasmoidItem {
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: gpu.value !== undefined ? Math.round(gpu.value) + "%" : "N/A"
             labelWidthHint: "100%"
-            color: evaluateModuleColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
+            color: widgetColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -472,7 +670,7 @@ PlasmoidItem {
             color: {
                 let p = (ramUsed.value / ramTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.ramColor;
-                return evaluateModuleColor(customData, p, baseCol);
+                return widgetColor(customData, p, baseCol, ramUsed.value);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -489,7 +687,7 @@ PlasmoidItem {
                 let rows = [["Usage:", percent(ramUsed.value, ramTotal.value).replace("%", " %")], ["Used:", formatBytes(ramUsed.value)], ["Available:", formatBytes(ramTotal.value - ramUsed.value)], ["Total:", formatBytes(ramTotal.value)]];
                 let p = (ramUsed.value / ramTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.ramColor;
-                let c = evaluateModuleColor(customData, p, baseCol);
+                let c = evaluateModuleColor(customData, p, baseCol, ramUsed.value);
                 return makeTooltipHtml("RAM MONITOR", c, rows);
             }
         }
@@ -517,7 +715,7 @@ PlasmoidItem {
             color: {
                 let p = (swapUsed.value / swapTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.swapColor;
-                return evaluateModuleColor(customData, p, baseCol);
+                return widgetColor(customData, p, baseCol, swapUsed.value);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -534,7 +732,7 @@ PlasmoidItem {
                 let rows = [["Usage:", percent(swapUsed.value, swapTotal.value).replace("%", " %")], ["Used:", formatBytes(swapUsed.value)], ["Available:", formatBytes(swapTotal.value - swapUsed.value)], ["Total:", formatBytes(swapTotal.value)]];
                 let p = (swapUsed.value / swapTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.swapColor;
-                let c = evaluateModuleColor(customData, p, baseCol);
+                let c = evaluateModuleColor(customData, p, baseCol, swapUsed.value);
                 return makeTooltipHtml("SWAP MONITOR", c, rows);
             }
         }
@@ -549,10 +747,10 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/up.svg")
             label: netUp.value !== undefined && formatBytes(netUp.value || 0, customData ? customData.speedFormat : -1)
-            labelWidthHint: "999.9 Mbps"
+            labelWidthHint: netSpeedWidthHint(customData ? customData.speedFormat : -1)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uploadColor;
-                return evaluateModuleColor(customData, netUp.value, baseCol);
+                return widgetColor(customData, netUp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -586,10 +784,10 @@ PlasmoidItem {
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/down.svg")
             label: netDown.value !== undefined && formatBytes(netDown.value || 0, customData ? customData.speedFormat : -1)
-            labelWidthHint: "999.9 Mbps"
+            labelWidthHint: netSpeedWidthHint(customData ? customData.speedFormat : -1)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.downloadColor;
-                return evaluateModuleColor(customData, netDown.value, baseCol);
+                return widgetColor(customData, netDown.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -634,8 +832,8 @@ PlasmoidItem {
             }
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
-                return evaluateModuleColor(customData, cpuTemp.value, baseCol);
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuTempColor;
+                return widgetColor(customData, cpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -646,7 +844,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuTempColor;
                 let c = evaluateModuleColor(customData, cpuTemp.value, baseCol);
                 return makeTooltipHtml("CPU TEMP", c, []);
             }
@@ -673,8 +871,8 @@ PlasmoidItem {
             }
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
-                return evaluateModuleColor(customData, gpuTemp.value, baseCol);
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
+                return widgetColor(customData, gpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -685,7 +883,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuTempColor;
                 let c = evaluateModuleColor(customData, gpuTemp.value, baseCol);
                 return makeTooltipHtml("GPU TEMP", c, []);
             }
@@ -700,11 +898,26 @@ PlasmoidItem {
             property var customData: getCustomSensorData("vram")
 
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
-            label: vramUsed.value !== undefined ? formatBytes(vramUsed.value || 0) : "N/A"
-            labelWidthHint: "99.9 GB"
+            label: {
+                if (vramUsed.value === undefined)
+                    return "N/A";
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                if (mode === 0 && vramTotal.value !== undefined && vramTotal.value > 0) {
+                    return percent(vramUsed.value, vramTotal.value);
+                }
+                return formatBytes(vramUsed.value || 0);
+            }
+            labelWidthHint: {
+                let mode = (customData && customData.displayMode !== undefined) ? customData.displayMode : 0;
+                return (mode === 0 && vramTotal.value !== undefined && vramTotal.value > 0) ? "100%" : bytesWidthHint(vramTotal.value);
+            }
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
-                return evaluateModuleColor(customData, vramUsed.value, baseCol);
+                let val = vramUsed.value;
+                if (vramTotal.value !== undefined && vramTotal.value > 0) {
+                    val = (vramUsed.value / vramTotal.value * 100);
+                }
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
+                return widgetColor(customData, val, baseCol, vramUsed.value);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -715,12 +928,26 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
-                let c = evaluateModuleColor(customData, vramUsed.value, baseCol);
-                return makeTooltipHtml("VRAM USED", c, []);
+                let rows = [];
+                if (vramUsed.value !== undefined) {
+                    if (vramTotal.value !== undefined && vramTotal.value > 0) {
+                        rows.push(["Usage:", percent(vramUsed.value, vramTotal.value).replace("%", " %")]);
+                    }
+                    rows.push(["Used:", formatBytes(vramUsed.value)]);
+                    if (vramTotal.value !== undefined && vramTotal.value > 0) {
+                        rows.push(["Available:", formatBytes(vramTotal.value - vramUsed.value)]);
+                        rows.push(["Total:", formatBytes(vramTotal.value)]);
+                    }
+                }
+                let val = vramUsed.value;
+                if (vramTotal.value !== undefined && vramTotal.value > 0) {
+                    val = (vramUsed.value / vramTotal.value * 100);
+                }
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.vramColor;
+                let c = evaluateModuleColor(customData, val, baseCol, vramUsed.value);
+                return makeTooltipHtml("VRAM MONITOR", c, rows);
             }
         }
-
     }
 
     Component {
@@ -733,8 +960,8 @@ PlasmoidItem {
             label: uptime.value !== undefined ? formatUptime(uptime.value || 0) : "0s"
             labelWidthHint: uptimeWidthHint(uptime.value)
             color: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
-                return evaluateModuleColor(customData, uptime.value, baseCol);
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uptimeColor;
+                return widgetColor(customData, uptime.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -745,7 +972,7 @@ PlasmoidItem {
             labelTextAlignment: Plasmoid.configuration.labelTextAlignment
             fixedLabelWidthExtra: Plasmoid.configuration.fixedLabelWidthExtra
             tooltipText: {
-                let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
+                let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uptimeColor;
                 let c = evaluateModuleColor(customData, uptime.value, baseCol);
                 return makeTooltipHtml("UPTIME", c, []);
             }
@@ -762,7 +989,7 @@ PlasmoidItem {
             icon: customData ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : ""
             label: customData ? (customData.formattedValue || (customData.value !== undefined ? (typeof customData.value === "number" ? Math.round(customData.value * 100) / 100 : customData.value) : "N/A")) : "N/A"
             labelWidthHint: "100%"
-            color: customData ? evaluateModuleColor(customData, customData.value, customData.customColor) : "#ffffff"
+            color: customData ? widgetColor(customData, customData.value, customData.customColor) : resolveModuleColor("#ffffff")
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily

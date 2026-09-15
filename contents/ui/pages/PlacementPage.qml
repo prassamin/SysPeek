@@ -11,6 +11,13 @@ Item {
 
     property var cfg
     property Item edgeSafeContainer: null
+
+    // "system" (and the legacy default white) means follow the color scheme.
+    function resolveColor(c) {
+        let s = String(c || "").trim().toLowerCase();
+        return (s === "" || s === "system" || s === "#ffffff" || s === "#fff") ? String(Kirigami.Theme.textColor) : c;
+    }
+
     property var baseAvailableItems: ["cpu", "gpu", "ram", "swap", "upload", "download", "cpu_temp", "gpu_temp", "vram", "uptime"]
     property var availableItems: {
         var items = baseAvailableItems.slice();
@@ -199,6 +206,90 @@ Item {
         id: sensorTree
     }
 
+    function getModuleSensorId(moduleId) {
+        try {
+            var mods = JSON.parse(cfg.customModules || "[]");
+            for (var i = 0; i < mods.length; i++) {
+                if (mods[i].id === moduleId && mods[i].sensorId) {
+                    return mods[i].sensorId;
+                }
+            }
+        } catch (e) {
+        }
+        return "";
+    }
+
+    property var gpuCandidatePrefixes: [
+        "gpu/gpu0",
+        "gpu/gpu1",
+        "gpu/gpu2",
+        "gpu/gpu3",
+        "gpu/gpu4",
+        "gpu/gpu5",
+        "gpu/gpu6",
+        "gpu/gpu7",
+        "gpu/gpu8"
+    ]
+    property string autoDetectedGpuPrefix: ""
+    property string autoResolvedGpuUsageSensorId: ""
+    property string autoResolvedGpuTempSensorId: ""
+    property bool gpuScanResolved: false
+
+    Item {
+        id: gpuDeviceScanner
+        visible: false
+
+        Repeater {
+            model: page.gpuCandidatePrefixes
+            delegate: Item {
+                property string prefix: modelData
+
+                Sensors.Sensor {
+                    id: candTempProbe
+                    sensorId: !page.autoResolvedGpuTempSensorId ? (prefix + "/temperature") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready) {
+                            if (!page.autoResolvedGpuTempSensorId || prefix !== "gpu/gpu0") {
+                                page.autoDetectedGpuPrefix = prefix;
+                                page.autoResolvedGpuTempSensorId = prefix + "/temperature";
+                                if (!page.autoResolvedGpuUsageSensorId) {
+                                    page.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                                }
+                                page.gpuScanResolved = true;
+                            }
+                        }
+                    }
+                }
+
+                Sensors.Sensor {
+                    id: candUsageProbe
+                    sensorId: !page.autoResolvedGpuUsageSensorId ? (prefix + "/usage") : ""
+                    updateRateLimit: 1000
+                    onStatusChanged: {
+                        if (status === Sensors.Sensor.Ready && !page.autoResolvedGpuUsageSensorId) {
+                            if (!page.autoDetectedGpuPrefix) {
+                                page.autoDetectedGpuPrefix = prefix;
+                            }
+                            page.autoResolvedGpuUsageSensorId = prefix + "/usage";
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            interval: 1500
+            running: !page.gpuScanResolved
+            onTriggered: {
+                if (!page.autoResolvedGpuUsageSensorId) {
+                    page.autoResolvedGpuUsageSensorId = page.autoDetectedGpuPrefix ? (page.autoDetectedGpuPrefix + "/usage") : "gpu/all/usage";
+                }
+                page.gpuScanResolved = true;
+            }
+        }
+    }
+
     Connections {
         function onPanelLayoutChanged() {
             // Avoid recursive updates if we just saved
@@ -260,7 +351,7 @@ Item {
                     width: 4
                     height: 16
                     radius: 2
-                    color: page.itemMetadata[itemId] ? page.itemMetadata[itemId].color : Components.Theme.textSecondary
+                    color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
                 }
 
                 Text {
@@ -907,7 +998,7 @@ Item {
                 width: 4
                 height: 16
                 radius: 2
-                color: page.itemMetadata[itemId] ? page.itemMetadata[itemId].color : Components.Theme.textSecondary
+                color: page.itemMetadata[itemId] ? page.resolveColor(page.itemMetadata[itemId].color) : Components.Theme.textSecondary
             }
 
             Text {

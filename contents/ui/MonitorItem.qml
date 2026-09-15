@@ -21,9 +21,14 @@ RowLayout {
     // Reserve label slot width so digit-count changes (e.g. 2% → 80%) do not resize the panel.
     property string labelWidthHint: "100%"
     property bool fixedLabelWidth: true
-    property int labelTextAlignment: 1 // 0=Left, 1=Right, 2=Center
+    property int labelTextAlignment: 0 // 0=Left, 1=Right, 2=Center
     property int fixedLabelWidthExtra: 0
-    readonly property int reservedLabelWidth: Math.ceil(labelMetrics.advanceWidth) + Math.max(0, fixedLabelWidthExtra)
+    // Grows to the widest label seen so values wider than the hint never jitter the panel.
+    property int widestSeenLabelWidth: 0
+    readonly property int reservedLabelWidth: Math.max(Math.ceil(labelMetrics.advanceWidth), widestSeenLabelWidth) + Math.max(0, fixedLabelWidthExtra)
+    onFontSizeChanged: widestSeenLabelWidth = 0
+    onFontFamilyChanged: widestSeenLabelWidth = 0
+    onLabelWidthHintChanged: widestSeenLabelWidth = 0
     readonly property int labelHAlign: {
         if (!fixedLabelWidth)
             return Text.AlignLeft;
@@ -72,7 +77,7 @@ RowLayout {
 
             contentItem: Text {
                 text: itemRoot.tooltipText
-                color: Components.Theme.textPrimary
+                color: Kirigami.Theme.textColor
                 font.pixelSize: 11
                 font.family: itemRoot.fontFamily
                 textFormat: Text.RichText
@@ -80,7 +85,7 @@ RowLayout {
             }
 
             background: Rectangle {
-                color: Components.Theme.bgBase
+                color: Kirigami.Theme.backgroundColor
                 border.color: Components.Theme.borderCol
                 border.width: 1
                 radius: 8
@@ -122,7 +127,7 @@ RowLayout {
                     y: 12
                     width: tooltipText.implicitWidth + 24
                     height: tooltipText.implicitHeight + 18
-                    color: Components.Theme.bgBase
+                    color: Kirigami.Theme.backgroundColor
                     border.color: Components.Theme.borderCol
                     border.width: 1
                     radius: 8
@@ -134,7 +139,7 @@ RowLayout {
                         x: 12
                         y: 12
                         text: itemRoot.tooltipText
-                        color: Components.Theme.textPrimary
+                        color: Kirigami.Theme.textColor
                         font.pixelSize: 11
                         font.family: itemRoot.fontFamily
                         textFormat: Text.RichText
@@ -186,6 +191,11 @@ RowLayout {
         font.pointSize: itemRoot.fontSize
         font.family: itemRoot.fontFamily !== "" ? itemRoot.fontFamily : Kirigami.Theme.defaultFont.family
         font.bold: true
+        onImplicitWidthChanged: {
+            if (itemRoot.fixedLabelWidth && implicitWidth > itemRoot.widestSeenLabelWidth)
+                itemRoot.widestSeenLabelWidth = Math.ceil(implicitWidth);
+
+        }
     }
 
 }
