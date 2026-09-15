@@ -150,6 +150,13 @@ PlasmoidItem {
         return null;
     }
 
+    // The default module color is white; treat it as "follow the color scheme" so
+    // labels and icons stay legible on light desktop themes.
+    function resolveModuleColor(color) {
+        let c = String(color || "").toLowerCase();
+        return (c === "" || c === "#ffffff" || c === "#fff") ? Kirigami.Theme.textColor : color;
+    }
+
     function evaluateModuleColor(customData, rawValue, fallbackColor) {
         if (!customData || !customData.conditions || customData.conditions.length === 0)
             return fallbackColor;
@@ -180,6 +187,12 @@ PlasmoidItem {
 
         }
         return fallbackColor;
+    }
+
+    // Same as evaluateModuleColor, but resolves the default white to the current
+    // color scheme so widget labels/icons stay legible on light desktop themes.
+    function widgetColor(customData, rawValue, fallbackColor) {
+        return resolveModuleColor(evaluateModuleColor(customData, rawValue, fallbackColor));
     }
 
     // action types: 0 = Launch App, 1 = Open URL, 2 = Run Command, 3 = Do Nothing
@@ -398,7 +411,7 @@ PlasmoidItem {
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/cpu.svg")
             label: cpu.value !== undefined ? Math.round(cpu.value) + "%" : "N/A"
             labelWidthHint: "100%"
-            color: evaluateModuleColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
+            color: widgetColor(customData, cpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.cpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -432,7 +445,7 @@ PlasmoidItem {
             icon: customData && customData.icon ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : Qt.resolvedUrl("../icons/gpu.svg")
             label: gpu.value !== undefined ? Math.round(gpu.value) + "%" : "N/A"
             labelWidthHint: "100%"
-            color: evaluateModuleColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
+            color: widgetColor(customData, gpu.value, (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.gpuColor)
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
@@ -478,7 +491,7 @@ PlasmoidItem {
             color: {
                 let p = (ramUsed.value / ramTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.ramColor;
-                return evaluateModuleColor(customData, p, baseCol);
+                return widgetColor(customData, p, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -523,7 +536,7 @@ PlasmoidItem {
             color: {
                 let p = (swapUsed.value / swapTotal.value * 100);
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.swapColor;
-                return evaluateModuleColor(customData, p, baseCol);
+                return widgetColor(customData, p, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -558,7 +571,7 @@ PlasmoidItem {
             labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.uploadColor;
-                return evaluateModuleColor(customData, netUp.value, baseCol);
+                return widgetColor(customData, netUp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -595,7 +608,7 @@ PlasmoidItem {
             labelWidthHint: "999.9 Mbps"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : Plasmoid.configuration.downloadColor;
-                return evaluateModuleColor(customData, netDown.value, baseCol);
+                return widgetColor(customData, netDown.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -641,7 +654,7 @@ PlasmoidItem {
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.cpuTempColor || "#ffffff");
-                return evaluateModuleColor(customData, cpuTemp.value, baseCol);
+                return widgetColor(customData, cpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -680,7 +693,7 @@ PlasmoidItem {
             labelWidthHint: (customData && customData.tempUnit === 1) ? "212°F" : "100°C"
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.gpuTempColor || "#ffffff");
-                return evaluateModuleColor(customData, gpuTemp.value, baseCol);
+                return widgetColor(customData, gpuTemp.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -710,7 +723,7 @@ PlasmoidItem {
             labelWidthHint: bytesWidthHint(vramTotal.value)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.vramColor || "#ffffff");
-                return evaluateModuleColor(customData, vramUsed.value, baseCol);
+                return widgetColor(customData, vramUsed.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -740,7 +753,7 @@ PlasmoidItem {
             labelWidthHint: uptimeWidthHint(uptime.value)
             color: {
                 let baseCol = (customData && customData.customColor) ? customData.customColor : (Plasmoid.configuration.uptimeColor || "#ffffff");
-                return evaluateModuleColor(customData, uptime.value, baseCol);
+                return widgetColor(customData, uptime.value, baseCol);
             }
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
@@ -768,7 +781,7 @@ PlasmoidItem {
             icon: customData ? (customData.icon.indexOf("/") !== -1 ? "file://" + customData.icon : Qt.resolvedUrl("../icons/" + customData.icon)) : ""
             label: customData ? (customData.formattedValue || (customData.value !== undefined ? (typeof customData.value === "number" ? Math.round(customData.value * 100) / 100 : customData.value) : "N/A")) : "N/A"
             labelWidthHint: "100%"
-            color: customData ? evaluateModuleColor(customData, customData.value, customData.customColor) : "#ffffff"
+            color: customData ? widgetColor(customData, customData.value, customData.customColor) : resolveModuleColor("#ffffff")
             iconTextSpacing: Plasmoid.configuration.iconTextSpacing
             fontSize: Plasmoid.configuration.fontSize
             fontFamily: Plasmoid.configuration.fontFamily
