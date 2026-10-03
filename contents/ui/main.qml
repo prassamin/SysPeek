@@ -278,17 +278,29 @@ PlasmoidItem {
         text: i18n("SysPeek Settings")
         icon.name: "configure"
         onTriggered: {
+            settingsLoader.active = true;
+            const settingsWindow = settingsLoader.item;
             settingsWindow.show();
             settingsWindow.raise();
             settingsWindow.requestActivate();
         }
     }
 
-    Settings {
-        id: settingsWindow
+    // Created on demand and destroyed on close: the settings pages run their own sensor
+    // probes and previews. libksysguard only unsubscribes a Sensor when it is destroyed or
+    // disabled, so an always-instantiated window keeps every probed sensor subscribed.
+    Loader {
+        id: settingsLoader
 
-        cfg: Plasmoid.configuration
-        meta: Plasmoid.metaData
+        active: false
+        sourceComponent: Settings {
+            cfg: Plasmoid.configuration
+            meta: Plasmoid.metaData
+            onVisibleChanged: {
+                if (!visible)
+                    Qt.callLater(() => settingsLoader.active = false);
+            }
+        }
     }
 
     Plasma5Support.DataSource {
@@ -349,7 +361,10 @@ PlasmoidItem {
 
                 Sensors.Sensor {
                     id: candTempProbe
-                    sensorId: !root.autoResolvedGpuTempSensorId ? (prefix + "/temperature") : ""
+                    // Fixed id + enabled: Sensor.setSensorId never unsubscribes the old id,
+                    // disabling does. Keeps the NVIDIA dGPU (nvidia-smi) unsubscribed after the scan.
+                    sensorId: prefix + "/temperature"
+                    enabled: !root.gpuScanResolved
                     updateRateLimit: 1000
                     onStatusChanged: {
                         if (status === Sensors.Sensor.Ready) {
@@ -367,7 +382,8 @@ PlasmoidItem {
 
                 Sensors.Sensor {
                     id: candUsageProbe
-                    sensorId: !root.autoResolvedGpuUsageSensorId ? (prefix + "/usage") : ""
+                    sensorId: prefix + "/usage"
+                    enabled: !root.gpuScanResolved
                     updateRateLimit: 1000
                     onStatusChanged: {
                         if (status === Sensors.Sensor.Ready && !root.autoResolvedGpuUsageSensorId) {
