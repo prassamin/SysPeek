@@ -1792,6 +1792,24 @@ Flickable {
                                         font.pixelSize: 11
                                     }
 
+                                    TextInput {
+                                        id: condColor
+
+                                        Layout.preferredWidth: 60
+                                        Layout.fillHeight: true
+                                        color: Components.Theme.textPrimary
+                                        font.pixelSize: 12
+                                        verticalAlignment: TextInput.AlignVCenter
+
+                                        Text {
+                                            text: "#ff0000"
+                                            color: Components.Theme.textTertiary
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            visible: !parent.text
+                                        }
+
+                                    }
+
                                     Components.ColorSwatch {
                                         colorValue: condColor.text
                                         width: 24
