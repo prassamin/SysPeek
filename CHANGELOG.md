@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [v2.1.1] - 2026-10-27
+
+### Performance
+- **GPU Power Management on Hybrid Laptops** ([#20](https://github.com/prassamin/SysPeek/pull/20)):
+  - Disabled candidate GPU probe sensors once hardware scanning resolves so `libksysguard` actively unsubscribes from `ksystemstats`. This allows dedicated NVIDIA GPUs on laptops to runtime-suspend to D3cold when idle, preventing unnecessary battery power drain.
+  - Converted the Settings window to on-demand loading via `Loader` so sensor tree probes and preview subscriptions are not instantiated at startup.
+
+### Fixed
+- **Condition Color Input in Module Editor** ([#21](https://github.com/prassamin/SysPeek/pull/21)):
+  - Restored the missing color text input in the condition editor row that caused a `ReferenceError` and prevented adding new dynamic condition rules.
+
 ## [v2.1.0] - 2026-09-15
 
 ### Added
